@@ -30,6 +30,6 @@ def relative_path(path_in, path_project, base='project.dir'):
 
 	# create output string expression and return it
 	new_string = path_in[len(path_project):]
-	expression = "path.normpath(%s + r'%s')" % (base, new_string)
+	expression = "re.sub(r'\\\\', '/', path.normpath(%s + r'%s'))" % (base, new_string)
 
 	return expression
