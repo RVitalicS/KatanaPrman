@@ -50,7 +50,7 @@ for node in NodegraphAPI.GetAllNodes():
 		path_param = node.getParameter('abcAsset')
 		make_relative(path_param)
 
-	# for Material nodes
+	# for PxrDomeLight Material nodes
 	if node.getType() == 'Material':
 		path_param = node.getParameter('shaders.prmanLightParams.lightColorMap.value')
 		make_relative(path_param)
@@ -59,3 +59,28 @@ for node in NodegraphAPI.GetAllNodes():
 	if node.getType() == 'LookFileBake':
 		path_param = node.getParameter('saveTo')
 		make_relative(path_param)
+
+	# for LiveGroup nodes
+	if node.getType() == 'LiveGroup':
+		path_param = node.getParameter('source')
+		make_relative(path_param)
+
+	# for AttributeSet nodes
+	if node.getType() == 'AttributeSet':
+
+		# get value of attributeName parameter of current node
+		param_name = node.getParameter('attributeName').getValue(0)
+
+		# for Proxies attributes
+		if param_name == 'proxies.viewer':
+			path_param = node.getParameter('stringValue').getChildren()[0]
+			if path_param:
+				make_relative(path_param)
+
+	# for OpScript nodes
+	if node.getType() == 'OpScript':
+
+		# for assigning textures per object using arbitrary attributes
+		path_param = node.getParameter('user.texturePath')
+		if path_param:
+			make_relative(path_param)
