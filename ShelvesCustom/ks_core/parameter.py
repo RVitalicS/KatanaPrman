@@ -12,6 +12,10 @@ def set_relative_path(param_in, path_in):
 	path_in <type 'str'>: File path
 	'''
 
+	# if parameter has expression string or path not exists then get out of here
+	if not os.path.exists(path_in):
+		return None
+
 	# find current project directory path
 	file_project = NodegraphAPI.NodegraphGlobals.GetProjectFile()
 	path_project = os.path.dirname(file_project)
