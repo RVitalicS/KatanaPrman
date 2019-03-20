@@ -50,10 +50,14 @@ for node in NodegraphAPI.GetAllNodes():
 		path_param = node.getParameter('abcAsset')
 		make_relative(path_param)
 
-	# for PxrDomeLight Material nodes
+	# for Material nodes
 	if node.getType() == 'Material':
+
+		# for PxrDomeLight Color Map parameter
 		path_param = node.getParameter('shaders.prmanLightParams.lightColorMap.value')
-		make_relative(path_param)
+
+		if path_param:
+			make_relative(path_param)
 
 	# for LookFileBake nodes
 	if node.getType() == 'LookFileBake':
