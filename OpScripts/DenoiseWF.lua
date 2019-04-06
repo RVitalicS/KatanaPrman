@@ -4,7 +4,7 @@ Location: /root
 renderer: prman
 
 Add outputChannels attributes for denoise workflow
-and create output as multichanneled exr file
+and create render output as multi-channeled exr file
 
 Required attributes:
     user.projectPath: (string) path where result render file will be saved
@@ -13,7 +13,7 @@ Required attributes:
 ]]
 
 
--- global variable that collect all defined here AOV channels as a sting
+-- global variable that collect all defined here LPE channels as a sting
 -- and will be used to adjust renderSettings.output attributes
 channels = ''
 
@@ -21,7 +21,7 @@ channels = ''
 function PrmanOutputChannelDefine (name, type, lpe, statistics)
    --[[ Works the same way as the PrmanOutputChannelDefine node plus collect defined channels ]]
 
-   -- add current AOV channel to global variable
+   -- add current LPE channel to global variable
    if channels == '' then
        channels = name
    else
@@ -80,9 +80,8 @@ local path_project = Attribute.GetStringValue(path_attribute, '')
 local name_attribute = Interface.GetAttr('user.shotName')
 local name = Attribute.GetStringValue(name_attribute, '')
 
--- create full path string to save multichanneled exr file
+-- create full path string to save multi-channeled exr file
 local path = pystring.os.path.join(path_project, string.format ("%s_variance.exr", name) )
-
 
 
 -- Create one render output for all denoise outputChannels
