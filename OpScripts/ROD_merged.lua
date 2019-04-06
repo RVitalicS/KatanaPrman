@@ -42,9 +42,9 @@ if output_root then
 
     -- add 'name' and 'raw' type parameters
     -- switch location type to 'file' mode and set 'renderLocation' parameter
-    Interface.SetAttr('renderSettings.outputs.workflow.type', StringAttribute("raw"))
-    Interface.SetAttr('renderSettings.outputs.workflow.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
-    Interface.SetAttr('renderSettings.outputs.workflow.locationType', StringAttribute("file"))
-    Interface.SetAttr('renderSettings.outputs.workflow.locationSettings.renderLocation', StringAttribute(path))
+    Interface.SetAttr('renderSettings.outputs.allOutputChannels.type', StringAttribute("raw"))
+    Interface.SetAttr('renderSettings.outputs.allOutputChannels.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
+    Interface.SetAttr('renderSettings.outputs.allOutputChannels.locationType', StringAttribute("file"))
+    Interface.SetAttr('renderSettings.outputs.allOutputChannels.locationSettings.renderLocation', StringAttribute(path))
 
 end
