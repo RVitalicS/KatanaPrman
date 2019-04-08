@@ -3,22 +3,22 @@
 Location: /root
 renderer: prman
 
-Add outputChannels attributes for AOVs and create render output as multichanneled exr file
+Add outputChannel attributes for AOVs and create render output as multi-channeled exr file
 
 Required attributes:
-    user.projectPath: (string) path where result render file will be saved
-    user.shotName: (string) frame numbered name ('Name_{:03d}'.format(frame) -> AttributeSet)
+    user.shotPath: (string) path where result render file will be saved
+    user.shotName: (string) frame numbered name ('shotName_F%03d'%frame -> AttributeSet)
 
 ]]
+
 
 
 -- global variable that collect all defined here AOV channels as a string
 -- and will be used to adjust renderSettings.output attribute
 channels = ''
 
-
 function PrmanOutputChannelDefine (name, type)
-	--[[ Works the same way as the PrmanOutputChannelDefine node plus collect defined channels ]]
+	--[[ Works the same way as the PrmanOutputChannelDefine ]]
 
 	-- add current AOV channel to global variable
     if channels == '' then
@@ -27,18 +27,18 @@ function PrmanOutputChannelDefine (name, type)
         channels = channels .. ',' .. name
     end
 
-    -- add two attributes grouped by input name
-    -- these two attributes create outputChannel
-    Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.type', name), StringAttribute(string.format ("%s", type)))
-    Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.name', name), StringAttribute(string.format ("%s", name)))
+    -- create outputChannel by name
+    Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.type', name), StringAttribute(type))
+    Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.name', name), StringAttribute(name))
 
 end
 
 
+
 -- define all AOV channels that you need
 PrmanOutputChannelDefine("Ci", "varying color")
-PrmanOutputChannelDefine("time", "varying float")
 PrmanOutputChannelDefine("a", "varying float")
+PrmanOutputChannelDefine("time", "varying float")
 PrmanOutputChannelDefine("Oi", "varying color")
 PrmanOutputChannelDefine("id", "varying float")
 PrmanOutputChannelDefine("rawId", "varying float")
@@ -75,16 +75,17 @@ PrmanOutputChannelDefine("z", "varying float")
 PrmanOutputChannelDefine("outsideIOR", "varying float")
 
 
--- get string value from added earlier userdefined attribute that contains path for render outputs
-local path_attribute = Interface.GetAttr('user.projectPath')
+
+-- get string value from added earlier user-defined attribute that contains path for render outputs
+local path_attribute = Interface.GetAttr('user.shotPath')
 local path_project = Attribute.GetStringValue(path_attribute, '')
 
--- get string value from added earlier userdefined attribute that contains name of the current shot
+-- get string value from added earlier user-defined attribute that contains name of the current shot
 local name_attribute = Interface.GetAttr('user.shotName')
 local name = Attribute.GetStringValue(name_attribute, '')
 
--- create full path string to save multichanneled exr file
-local path = pystring.os.path.join(path_project, string.format ("%s_aovs.exr", name) )
+-- create full path string to save multi-channeled exr file
+local path = pystring.os.path.join(path_project, string.format("%s_aovs.exr", name))
 
 
 
@@ -93,6 +94,6 @@ local path = pystring.os.path.join(path_project, string.format ("%s_aovs.exr", n
 -- add 'name' and 'raw' type parameters
 -- switch location type to 'file' mode and set 'renderLocation' parameter
 Interface.SetAttr('renderSettings.outputs.aovs.type', StringAttribute("raw"))
-Interface.SetAttr('renderSettings.outputs.aovs.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
+Interface.SetAttr('renderSettings.outputs.aovs.rendererSettings.channel', StringAttribute(channels))
 Interface.SetAttr('renderSettings.outputs.aovs.locationType', StringAttribute("file"))
 Interface.SetAttr('renderSettings.outputs.aovs.locationSettings.renderLocation', StringAttribute(path))

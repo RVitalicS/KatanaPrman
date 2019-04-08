@@ -3,20 +3,19 @@
 Location: /root
 renderer: prman
 
-Add outputChannels attributes for denoise workflow
-and create render output as multi-channeled exr file
+Add outputChannel attributes for 'denoise' workflow and create render output as multi-channeled exr file
 
 Required attributes:
-    user.projectPath: (string) path where result render file will be saved
-    user.shotName: (string) frame numbered name ('Name_{:03d}'.format(frame) -> AttributeSet)
+    user.shotPath: (string) path where result render file will be saved
+    user.shotName: (string) frame numbered name ('shotName_F%03d'%frame -> AttributeSet)
 
 ]]
+
 
 
 -- global variable that collect all defined here LPE channels as a sting
 -- and will be used to adjust renderSettings.output attributes
 channels = ''
-
 
 function PrmanOutputChannelDefine (name, type, lpe, statistics)
    --[[ Works the same way as the PrmanOutputChannelDefine node plus collect defined channels ]]
@@ -28,27 +27,27 @@ function PrmanOutputChannelDefine (name, type, lpe, statistics)
        channels = channels .. ',' .. name
    end
 
-   -- add two attributes grouped by input name
-   -- these two attributes create base of outputChannel
-   Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.type', name), StringAttribute(string.format ("%s", type)))
-   Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.name', name), StringAttribute(string.format ("%s", name)))
+   -- create outputChannel by name
+   Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.type', name), StringAttribute(type))
+   Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.name', name), StringAttribute(name))
 
    -- add required 'source' parameter for denoise workflow
    if lpe then
-       Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.params.source.type', name), StringAttribute("string"))
-       Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.params.source.value', name), StringAttribute(string.format ("%s", lpe)))
+       Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.type', name), StringAttribute("string"))
+       Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.value', name), StringAttribute(lpe))
    end
 
    -- add required 'statistics' parameter for denoise workflow
    if statistics then
-       Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.params.statistics.type', name), StringAttribute("string"))
-       Interface.SetAttr(string.format ('prmanGlobalStatements.outputChannels.%s.params.statistics.value', name), StringAttribute(string.format ("%s", statistics)))
+       Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.type', name), StringAttribute("string"))
+       Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.value', name), StringAttribute(statistics))
    end
 
 end
 
 
--- define channels for denoise workflow
+
+-- add channels for 'denoise' workflow
 PrmanOutputChannelDefine("Ci", "varying color")
 PrmanOutputChannelDefine("a", "varying float")
 PrmanOutputChannelDefine("mse", "varying color", "Ci", "mse")
@@ -72,23 +71,25 @@ PrmanOutputChannelDefine("forward", "varying vector", "vector motionFore")
 PrmanOutputChannelDefine("backward", "varying vector", "vector motionBack")
 
 
--- get string value from added earlier userdefined attribute that contains path for render outputs
-local path_attribute = Interface.GetAttr('user.projectPath')
+
+-- get string value from added earlier user-defined attribute that contains path for render outputs
+local path_attribute = Interface.GetAttr('user.shotPath')
 local path_project = Attribute.GetStringValue(path_attribute, '')
 
--- get string value from added earlier userdefined attribute that contains name of the current shot
+-- get string value from added earlier user-defined attribute that contains name of the current shot
 local name_attribute = Interface.GetAttr('user.shotName')
 local name = Attribute.GetStringValue(name_attribute, '')
 
 -- create full path string to save multi-channeled exr file
-local path = pystring.os.path.join(path_project, string.format ("%s_variance.exr", name) )
+local path = pystring.os.path.join(path_project, string.format("%s_variance.exr", name) )
 
 
--- Create one render output for all denoise outputChannels
+
+-- Create one render output for all 'denoise' outputChannels
 
 -- add 'name' and 'raw' type parameters
 -- switch location type to 'file' mode and set 'renderLocation' parameter
 Interface.SetAttr('renderSettings.outputs.variance.type', StringAttribute("raw"))
-Interface.SetAttr('renderSettings.outputs.variance.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
+Interface.SetAttr('renderSettings.outputs.variance.rendererSettings.channel', StringAttribute(channels))
 Interface.SetAttr('renderSettings.outputs.variance.locationType', StringAttribute("file"))
 Interface.SetAttr('renderSettings.outputs.variance.locationSettings.renderLocation', StringAttribute(path))
