@@ -72,6 +72,7 @@ local name = Attribute.GetStringValue(name_attribute, '')
 
 -- create full path string to save multi-channeled exr file
 local path = pystring.os.path.join(path_project, string.format("%s_basicWF.exr", name) )
+path = pystring.replace(path, '\\', '/')
 
 
 
