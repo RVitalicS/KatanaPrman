@@ -80,7 +80,7 @@ path = pystring.replace(path, '\\', '/')
 
 -- add 'name' and 'raw' type parameters
 -- switch location type to 'file' mode and set 'renderLocation' parameter
-Interface.SetAttr('renderSettings.outputs.basicWF.type', StringAttribute("raw"))
-Interface.SetAttr('renderSettings.outputs.basicWF.rendererSettings.channel', StringAttribute(channels))
-Interface.SetAttr('renderSettings.outputs.basicWF.locationType', StringAttribute("file"))
-Interface.SetAttr('renderSettings.outputs.basicWF.locationSettings.renderLocation', StringAttribute(path))
+Interface.SetAttr('renderSettings.outputs.primary.type', StringAttribute("raw"))
+Interface.SetAttr('renderSettings.outputs.primary.rendererSettings.channel', StringAttribute(channels))
+Interface.SetAttr('renderSettings.outputs.primary.locationType', StringAttribute("file"))
+Interface.SetAttr('renderSettings.outputs.primary.locationSettings.renderLocation', StringAttribute(path))
