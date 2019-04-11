@@ -10,6 +10,8 @@ Required attributes:
     user.shotPath: (string) path where result render file will be saved
     user.shotName: (string) frame numbered name ('shotName_F%03d'%frame -> AttributeSet)
 
+Run after 'NamedEmptyLightGroup' script only
+
 ]]
 
 
@@ -25,31 +27,35 @@ name = Attribute.GetStringValue(name, "")
 
 
 function PrmanOutputChannelDefine (name, lpe, group, type)
-    --[[ Works the same way as the PrmanOutputChannelDefine node ]]
+    --[[
+    Works as the PrmanOutputChannelDefine node
+
+    Arguments:
+        name  (string): name of outputChannel
+        lpe   (string): Light Path Expression ("color lpe:C.*[<L.>O]")
+        group (string): name of the part that was separated by expression
+        type  (string): type of current output ("varying color")
+    ]]
 
     -- adjust outputChannel name if LightGroup is set
-    local out_name = ""
-    if group == "" then out_name = name
-    else out_name = name .. "_" .. group end
+    if group == "" then name = name
+    else name = name .. "_" .. group end
 
     -- set default value for the 'type' argument
     type=type or "varying color"
 
     -- add current LPE channel to global variable
-    if channels == "" then
-        channels = out_name
-    else
-        channels = channels .. "," .. out_name
-    end
+    if channels == "" then channels = name
+    else channels = channels .. "," .. name end
 
     -- create outputChannel by name
-    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.type", out_name), StringAttribute(type))
-    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.name", out_name), StringAttribute(out_name))
+    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.type", name), StringAttribute(type))
+    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.name", name), StringAttribute(name))
 
     -- set Light Path Expression
     if lpe ~= "" then
-        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.type", out_name), StringAttribute("string"))
-        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.value", out_name), StringAttribute(lpe))
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.type", name), StringAttribute("string"))
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.value", name), StringAttribute(lpe))
     end
 
 end
@@ -61,7 +67,14 @@ end
 channels = ""
 
 function RenderOutputDefine (group, inversion)
-    --[[ Create render output for Basic LPE workflow as multi-channeled exr file depending on input LightGroup ]]
+    --[[
+    Create render output for Basic LPE workflow
+    as multi-channeled exr file depending on input LightGroup
+
+    Arguments:
+        group   (string): single group name or string of group items separated by comma symbol
+        inversion (bool): flag to create LightGroups expression with exception
+    ]]
 
     -- define expression and output name tag variables as arguments for 'PrmanOutputChannelDefine' function
     local lpe_value = ""
@@ -71,10 +84,12 @@ function RenderOutputDefine (group, inversion)
     local file_tag = ""
     local output = "primary"
 
-    -- adjust expression and output name tag variables depending on input arguments
-    if group=="" then
-        -- do nothing
-    elseif inversion then
+
+    -- adjust variables depending on input arguments:
+
+    if group=="__empty__" then -- leave all variables as they are
+
+    elseif inversion then -- create inverted for all defined LightGroups expression part
 
         -- split string to table separated by comma symbol
         local items_table = {}
@@ -91,15 +106,16 @@ function RenderOutputDefine (group, inversion)
 
         -- adjust variables
         lpe_value = string.format("[^%s]", all_groups)
-        lpe_group = "rest"
-        file_tag = "_restLightGroup"
+        lpe_group = "primary"
+        file_tag = "_" .. lpe_group .. "LightGroup"
         output = "basicWF" .. file_tag
 
-    else
+    else -- create expression part for single LightGroup
+
         -- adjust variables
         lpe_value = string.format("['%s']", group)
         lpe_group = group
-        file_tag = string.format("_%sLightGroup", group)
+        file_tag = "_" .. lpe_group .. "LightGroup"
         output = "basicWF" .. file_tag
     end
 
@@ -110,7 +126,7 @@ function RenderOutputDefine (group, inversion)
 
     -- add 'Ci' and 'a' channels
     PrmanOutputChannelDefine("Ci", string.format("color lpe:C.*[<L.%s>O]", lpe_value), lpe_group)
-    PrmanOutputChannelDefine("a","", lpe_group, "varying float")
+    PrmanOutputChannelDefine("a","", "", "varying float")
 
     -- add channels for Basic LPE workflow
     PrmanOutputChannelDefine("directDiffuse", string.format("color lpe:C<RD>[<L.%s>O]", lpe_value), lpe_group)
@@ -149,7 +165,7 @@ for i=0, light_list:getNumberOfChildren()-1 do
     -- get SceneGraph path of current light
     local light_attributes = light_list:getChildByIndex(i)
     local SceneGraph_path = light_attributes:getChildByName("path")
-    SceneGraph_path = Attribute.GetStringValue(SceneGraph_path, '')
+    SceneGraph_path = Attribute.GetStringValue(SceneGraph_path, "")
 
     -- get LightGroup of current light
     local light_group = Interface.GetGlobalAttr("material.prmanLightParams.lightGroup", SceneGraph_path)
@@ -170,12 +186,12 @@ local empties = false
 
 for i=1, #light_groups do
     local value = light_groups[i]
-    if value~="" then
+    if value~="__empty__" then
         if not hash[value] then
             group_items[#group_items+1] = value
             hash[value] = true
         end
-    elseif value=="" then
+    elseif value=="__empty__" then
         empties=true
     end
 end
@@ -185,9 +201,7 @@ light_groups = group_items
 
 
 -- for each LightGroup create its own render output as multi-channeled exr file
-for i=1, #light_groups do
-    RenderOutputDefine(light_groups[i])
-end
+for i=1, #light_groups do RenderOutputDefine(light_groups[i]) end
 
 -- if there is at least one light without LightGroup
 if empties then
@@ -196,10 +210,11 @@ if empties then
         -- if there are some lights with LightGroups and some without LightGroups
         -- then create one render output for all empty LightGroups
         RenderOutputDefine(table.concat(light_groups, ","), true)
-    else
 
+    else
         -- if there is no LightGroup at all
         -- then create one render output as multi-channeled exr file
-        RenderOutputDefine("")
+        RenderOutputDefine("__empty__")
+
     end
 end
