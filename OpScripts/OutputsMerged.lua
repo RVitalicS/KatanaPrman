@@ -6,8 +6,8 @@ renderer: prman
 For all defined outputChannels create one render output as multi-channeled exr file
 
 Required attributes:
-    user.projectPath: (string) path where result render file will be saved
-    user.shotName: (string) frame numbered name ('Name_{:03d}'.format(frame) -> AttributeSet)
+    user.shotPath: (string) path where result render file will be saved
+    user.shotName: (string) frame numbered name ('shotName_F%03d'%frame -> AttributeSet)
 
 ]]
 
@@ -24,10 +24,10 @@ if output_root then
     for i = 1, children_num-1 do channels = channels .. ',' .. output_root:getChildName(i) end
 
 
-    -- get added earlier userdefined attributes that contain:
+    -- get added earlier user-defined attributes that contain:
     -- path for render outputs,
     -- name of the current shot
-    local path_attribute = Interface.GetAttr('user.projectPath')
+    local path_attribute = Interface.GetAttr('user.shotPath')
     local name_attribute = Interface.GetAttr('user.shotName')
 
     -- get string values of those attributes
@@ -36,15 +36,16 @@ if output_root then
 
     -- create full path string to save multi-channeled exr file
     local path = pystring.os.path.join(path_project, string.format ("%s.exr", name) )
+    path = pystring.replace(path, "\\", "/")
 
 
     -- Create one render output for all defined outputChannels
 
     -- add 'name' and 'raw' type parameters
     -- switch location type to 'file' mode and set 'renderLocation' parameter
-    Interface.SetAttr('renderSettings.outputs.allOutputChannels.type', StringAttribute("raw"))
-    Interface.SetAttr('renderSettings.outputs.allOutputChannels.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
-    Interface.SetAttr('renderSettings.outputs.allOutputChannels.locationType', StringAttribute("file"))
-    Interface.SetAttr('renderSettings.outputs.allOutputChannels.locationSettings.renderLocation', StringAttribute(path))
+    Interface.SetAttr('renderSettings.outputs.primary.type', StringAttribute("raw"))
+    Interface.SetAttr('renderSettings.outputs.primary.rendererSettings.channel', StringAttribute(string.format ("%s", channels)))
+    Interface.SetAttr('renderSettings.outputs.primary.locationType', StringAttribute("file"))
+    Interface.SetAttr('renderSettings.outputs.primary.locationSettings.renderLocation', StringAttribute(path))
 
 end
