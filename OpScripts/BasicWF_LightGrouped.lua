@@ -106,7 +106,7 @@ function RenderOutputDefine (group, inversion)
 
         -- adjust variables
         lpe_value = string.format("[^%s]", all_groups)
-        lpe_group = "primary"
+        lpe_group = "others"
         file_tag = "_" .. lpe_group .. "LightGroup"
         output = "basicWF" .. file_tag
 
