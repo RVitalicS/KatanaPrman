@@ -5,9 +5,28 @@ Add prman render button at the top of the interface
 
 from PyQt5.QtWidgets import QLayout
 from Katana import UI4
-
-from ks_core.render import render_viewed
+from Katana import NodegraphAPI
+from PyUtilModule import RenderManager
 import os
+
+
+def render_viewed():
+	''' Start render from viewed node '''
+
+	# which node to render
+	render_node = None
+
+	# search viewed node
+	all_nodes = NodegraphAPI.GetAllNodes()
+	for node in all_nodes:
+
+		# assign viewed node to variable for render
+		if NodegraphAPI.IsNodeViewed(node):
+			render_node = node
+
+	# start render for chosen node
+	RenderManager.StartRender('previewRender', node=render_node)
+
 
 # get icon for button
 this_dir = os.path.dirname(__file__)
