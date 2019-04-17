@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE stormXML>
+<stormXML version="1k">
+  <formats>
+
+    <format width="5120" height="2160" pixelAspect="1.00" name="5K_Ultrawide" groupName="DAR_21x9" />
+    <format width="3440" height="1440" pixelAspect="1.00" name="UWQHD" groupName="DAR_21x9" />
+    <format width="2560" height="1080" pixelAspect="1.00" name="UWHD" groupName="DAR_21x9" />
+
+    <format width="15360" height="8640" pixelAspect="1.00" name="16K" groupName="DAR_16x9" />
+    <format width="7680" height="4320" pixelAspect="1.00" name="8K_UHD" groupName="DAR_16x9" />
+    <format width="5120" height="2880" pixelAspect="1.00" name="5K_UHD" groupName="DAR_16x9" />
+    <format width="4096" height="2304" pixelAspect="1.00" name="Full_4K_UHD" groupName="DAR_16x9" />
+    <format width="3840" height="2160" pixelAspect="1.00" name="4K_UHD" groupName="DAR_16x9" />
+    <format width="2560" height="1440" pixelAspect="1.00" name="QHD" groupName="DAR_16x9" />
+    <format width="1920" height="1080" pixelAspect="1.00" name="Full_HD_1080p" groupName="DAR_16x9" />
+    <format width="1280" height="720" pixelAspect="1.00" name="HD_720p" groupName="DAR_16x9" />
+    <format width="960" height="540" pixelAspect="1.00" name="qHD" groupName="DAR_16x9" />
+    <format width="640" height="360" pixelAspect="1.00" name="nHD" groupName="DAR_16x9" />
+
+    <format width="14008" height="9921" pixelAspect="1.00" name="A0-Portrait" groupName="ISO216A-Portrait" />
+    <format width="9921" height="7016" pixelAspect="1.00" name="A1-Portrait" groupName="ISO216A-Portrait" />
+    <format width="7016" height="4961" pixelAspect="1.00" name="A2-Portrait" groupName="ISO216A-Portrait" />
+    <format width="4961" height="3508" pixelAspect="1.00" name="A3-Portrait" groupName="ISO216A-Portrait" />
+    <format width="3508" height="2480" pixelAspect="1.00" name="A4-Portrait" groupName="ISO216A-Portrait" />
+    <format width="2480" height="1748" pixelAspect="1.00" name="A5-Portrait" groupName="ISO216A-Portrait" />
+    <format width="1748" height="1240" pixelAspect="1.00" name="A6-Portrait" groupName="ISO216A-Portrait" />
+    <format width="1240" height="874" pixelAspect="1.00" name="A7-Portrait" groupName="ISO216A-Portrait" />
+    <format width="874" height="614" pixelAspect="1.00" name="A8-Portrait" groupName="ISO216A-Portrait" />
+
+    <format width="9921" height="14008" pixelAspect="1.00" name="A0-Landscape" groupName="ISO216A-Landscape" />
+    <format width="7016" height="9921" pixelAspect="1.00" name="A1-Landscape" groupName="ISO216A-Landscape" />
+    <format width="4961" height="7016" pixelAspect="1.00" name="A2-Landscape" groupName="ISO216A-Landscape" />
+    <format width="3508" height="4961" pixelAspect="1.00" name="A3-Landscape" groupName="ISO216A-Landscape" />
+    <format width="2480" height="3508" pixelAspect="1.00" name="A4-Landscape" groupName="ISO216A-Landscape" />
+    <format width="1748" height="2480" pixelAspect="1.00" name="A5-Landscape" groupName="ISO216A-Landscape" />
+    <format width="1240" height="1748" pixelAspect="1.00" name="A6-Landscape" groupName="ISO216A-Landscape" />
+    <format width="874" height="1240" pixelAspect="1.00" name="A7-Landscape" groupName="ISO216A-Landscape" />
+    <format width="614" height="874" pixelAspect="1.00" name="A8-Landscape" groupName="ISO216A-Landscape" />
+
+  </formats>
+</stormXML>
