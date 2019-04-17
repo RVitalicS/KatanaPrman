@@ -1,14 +1,14 @@
-# Scripts for Foundry Katana rendering program
+# Resources for Foundry Katana rendering program
 
 
-## ShelvesCustom
-**This folder contains scripts that stored in ~.katana\Shelves\Custom**
+## Plug-ins and customizations
 
-There are some useful scripts for working with rendering, node parameters, converting textures end etc.
+Here is set of sub-directories
+that are used by different parts of the program.
 
 
 ## OpScripts
-**This folder contains scripts for OpScript node in Katana**
 
-All of these scripts are for working with render channels and output files
-
+There are scripts for defining LPEs, AOVs or Holdouts
+with output files in single node, some for working with LightGroups,
+some for working with render statistic and some for working with geometry attributes.
