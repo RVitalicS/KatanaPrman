@@ -125,7 +125,9 @@ function RenderOutputDefine (group, inversion)
 
 
     -- add 'Ci' and 'a' channels
-    PrmanOutputChannelDefine("Ci", string.format("color lpe:C.*[<L.%s>O]", lpe_value), lpe_group)
+    if output ~= "primary" then
+        PrmanOutputChannelDefine("Ci", string.format("color lpe:C.*[<L.%s>O]", lpe_value), lpe_group)
+    end
     PrmanOutputChannelDefine("a","", "", "varying float")
 
     -- add channels for Basic LPE workflow
