@@ -8,14 +8,23 @@ import os
 import sys
 
 
+# add paths from katana resources to access importing modules from there
 for i in os.getenv('KATANA_RESOURCES').split(';'):
 	if os.path.exists(i):
 		if i not in sys.path:
 			sys.path.append(i)
 
 
+# create callback
 def onStartupComplete(objectHash):
-	from Startup import prmanRunButton
+
+	# try if Katana launched in interactive (GUI) mode
+	try:
+		from Startup import prmanRunButton
+	except:
+		pass
 
 
+# register callback
 Callbacks.addCallback(Callbacks.Type.onStartupComplete, onStartupComplete)
+
