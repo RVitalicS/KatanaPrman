@@ -6,8 +6,8 @@ and adds paths of those to script command as arguments
 ]]
 
 
--- get string command of 'exr_cleaner' post render script
-local scriptCommand = Interface.GetAttr("renderSettings.outputs.exr_cleaner.rendererSettings.scriptCommand")
+-- get string command of 'exr_razor' post render script
+local scriptCommand = Interface.GetAttr("renderSettings.outputs.exr_razor.rendererSettings.scriptCommand")
 scriptCommand = Attribute.GetStringValue(scriptCommand, "")
 
 -- get all defined render outputs
@@ -39,5 +39,5 @@ if outputs_root then
     end
 end
 
--- set back edited string command to 'exr_cleaner' post render script
-Interface.SetAttr("renderSettings.outputs.exr_cleaner.rendererSettings.scriptCommand", StringAttribute(scriptCommand))
+-- set back edited string command to 'exr_razor' post render script
+Interface.SetAttr("renderSettings.outputs.exr_razor.rendererSettings.scriptCommand", StringAttribute(scriptCommand))
