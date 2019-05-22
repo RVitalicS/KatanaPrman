@@ -16,21 +16,6 @@ Required User Parameters:
 
 
 
-function SetTexture(attr, path)
-    --[[
-    Creates attribute with texture path value
-
-    Arguments:
-        attr (string): attribute name that will be used in {attr:textures.xxx} syntax
-        path (string): path to texture file
-    ]]
-
-    Interface.SetAttr(string.format('textures.%s', attr), StringAttribute(path))
-
-end
-
-
-
 -- possible tags
 local shader_parameters = {
     'diffuseColor',
@@ -62,14 +47,14 @@ for i=1, #shader_parameters do
     if shader_parameter then
 
         local path = texturesPath .. string.format('/%s', Attribute.GetStringValue(shader_parameter,''))
-        SetTexture(attr, path)
+        Interface.SetAttr(string.format('textures.%s', attr), StringAttribute(path))
 
 
     -- if there wasn't found current tag
     -- create full path to default texture file and set parameter
     else
         local path = defaultsPath .. string.format('/%s.tex', attr)
-        SetTexture(attr, path)
+        Interface.SetAttr(string.format('textures.%s', attr), StringAttribute(path))
 
     end
 end
