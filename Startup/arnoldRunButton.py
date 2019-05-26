@@ -1,5 +1,5 @@
 """
-Add prman render button at the top of the interface
+Add arnold render button at the top of the interface
 
 """
 
@@ -30,7 +30,7 @@ def render_viewed():
 
 # get icon for button
 this_dir = os.path.dirname(__file__)
-icon_file = os.path.join(this_dir, 'Icons', 'prman.png')
+icon_file = os.path.join(this_dir, 'Icons', 'arnold.png')
 
 # create and adjust button widget
 ToolbarButton = UI4.Widgets.ToolbarButton('Render', None, UI4.Util.IconManager.GetPixmap(icon_file))

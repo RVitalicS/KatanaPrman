@@ -1,5 +1,5 @@
 """
-Add prman render button at the top of the interface
+Add arnold render button at the top of the interface
 
 """
 
@@ -20,7 +20,7 @@ def onStartupComplete(objectHash):
 
 	# try if Katana launched in interactive (GUI) mode
 	try:
-		from Startup import prmanRunButton
+		from Startup import arnoldRunButton
 	except:
 		pass
 
