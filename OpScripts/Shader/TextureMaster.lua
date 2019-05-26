@@ -53,7 +53,7 @@ for i=1, #shader_parameters do
     -- if there wasn't found current tag
     -- create full path to default texture file and set parameter
     else
-        local path = defaultsPath .. string.format('/%s.tex', attr)
+        local path = defaultsPath .. string.format('/%s<udim>.tex', attr)
         Interface.SetAttr(string.format('textures.%s', attr), StringAttribute(path))
 
     end
