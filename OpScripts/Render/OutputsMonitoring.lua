@@ -1,7 +1,7 @@
 --[[
 
 Location: /root
-renderer: prman
+renderer: arnold
 
 Add all defined outputChannels to local outputs
 to use those as interactiveOutputs for viewing in Monitor tab
@@ -23,7 +23,7 @@ end
 
 
 -- get all defined outputChannels then get count of those
-local outputChannels_root = Interface.GetAttr('prmanGlobalStatements.outputChannels')
+local outputChannels_root = Interface.GetAttr('arnoldGlobalStatements.outputChannels')
 if outputChannels_root then local outputChannels_num = outputChannels_root:getNumberOfChildren()
 
     -- add each outputChannel to local output
