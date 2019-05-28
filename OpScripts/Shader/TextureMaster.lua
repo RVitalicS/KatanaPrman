@@ -1,7 +1,7 @@
 --[[
 
 Location: /root/world/geo/asset//*{@type == "polymesh"} /root/world/geo/asset//*{@type == "subdmesh"}
-renderer: prman
+renderer: arnold
 
 Find shader parameter tags, read values of those attributes
 and set texture attributes that will be read dynamically while render
@@ -18,13 +18,8 @@ Required User Parameters:
 
 -- possible tags
 local shader_parameters = {
-    'diffuseColor',
-    'primSpecEdgeColor',
-    'primSpecRefractionIndex',
-    'primSpecExtinctionCoefficient',
-    'primSpecRoughness',
-    'normal',
-    'bump'}
+    'baseColor',
+    'specularColor'}
 
 
 
