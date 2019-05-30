@@ -36,8 +36,8 @@ function ArnoldOutput (name, lpe, group)
 
 
     -- define output data type with one exception
-    local channel_type = 'RGB'
-    if name == 'primary' then channel_type = 'RGBA' end
+    local channel_type = "RGB"
+    if name == "primary" then channel_type = "RGBA" end
 
     -- adjust outputChannel name if LightGroup is set
     if group == "" then name = name
@@ -49,23 +49,23 @@ function ArnoldOutput (name, lpe, group)
 
 
     -- create outputChannel by name
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.name', name), StringAttribute(name))
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.type', name), StringAttribute(channel_type))
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.channel', name), StringAttribute(name))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.name", name), StringAttribute(name))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.type", name), StringAttribute(channel_type))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.channel", name), StringAttribute(name))
 
     -- add driver attributes
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.driverParameters.half_precision', name), IntAttribute(0))
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.driverParameters.tiled', name), IntAttribute(0))
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.driverParameters.color_space', name), StringAttribute('linear'))
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.driverParameters.autocrop', name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.half_precision", name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.tiled", name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.color_space", name), StringAttribute("linear"))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.autocrop", name), IntAttribute(0))
 
     -- set Light Path Expression
-    Interface.SetAttr(string.format('arnoldGlobalStatements.outputChannels.%s.lightPathExpression', name), StringAttribute(lpe))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.lightPathExpression", name), StringAttribute(lpe))
 
 
     -- create render output for current outputChannel
-    Interface.SetAttr(string.format('renderSettings.outputs.%s.type', name), StringAttribute('raw'))
-    Interface.SetAttr(string.format('renderSettings.outputs.%s.rendererSettings.channel', name), StringAttribute(name))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", name), StringAttribute("raw"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.channel", name), StringAttribute(name))
 
 end
 
@@ -95,7 +95,7 @@ function RenderOutputDefine (group, inversion)
 
     -- define tag and output variables to adjust renderSettings.output attribute
     local file_tag = ""
-    local output = "primary"
+    local output = "multichanneled"
 
 
     -- adjust variables depending on input arguments:
@@ -121,7 +121,7 @@ function RenderOutputDefine (group, inversion)
         lpe_value = "'default'"
         lpe_group = "default"
         file_tag = "_" .. lpe_group .. "LightGroup"
-        output = "multichanneled" .. file_tag
+        output = output .. file_tag
 
     else -- create expression part for single LightGroup
 
@@ -129,7 +129,7 @@ function RenderOutputDefine (group, inversion)
         lpe_value = string.format("['%s']", group)
         lpe_group = group
         file_tag = "_" .. lpe_group .. "LightGroup"
-        output = "multichanneled" .. file_tag
+        output = output .. file_tag
     end
 
 
@@ -141,7 +141,7 @@ function RenderOutputDefine (group, inversion)
     ArnoldOutput("primary", string.format("C.*[<L.%s>O]", lpe_value), lpe_group)
 
     -- add all other built-in channels
-    ArnoldOutput("directDiffuse", string.format("C<RD>[<L.%s>O]", lpe_value), lpe_group)
+    ArnoldOutput("diffuseDirect", string.format("C<RD>[<L.%s>O]", lpe_value), lpe_group)
     ArnoldOutput("diffuseIndirect", string.format("C<RD>[DSVOB].*[<L.%s>O]", lpe_value), lpe_group)
 
     ArnoldOutput("specularDirect", string.format("C<RS[^'coat''sheen']>[<L.%s>O]", lpe_value), lpe_group)
@@ -169,7 +169,7 @@ function RenderOutputDefine (group, inversion)
     local path = pystring.os.path.join(path_project, string.format("%s%s.exr", name, file_tag) )
     path = pystring.replace(path, "\\", "/")
 
-    -- Merge all render outputs to multichanneled exr file
+    -- Merge all render outputs to multi-channeled exr file
     -- switch location type to 'file' mode and set 'renderLocation' parameter
     Interface.SetAttr(string.format("renderSettings.outputs.%s.type", output), StringAttribute("merge"))
     Interface.SetAttr(string.format("renderSettings.outputs.%s.mergeOutputs", output), StringAttribute(channels))
