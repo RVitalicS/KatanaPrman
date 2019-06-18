@@ -3,23 +3,34 @@
 Location: /root
 renderer: arnold
 
-Add outputChannel attributes to create render output as multichanneled exr file
+Add outputChannel attributes to create render output as multi-channeled exr file
 
 Required attributes:
     user.shotPath: (string) path where result render file will be saved
-    user.shotName: (string) frame numbered name ('shotName_F%03d'%frame -> AttributeSet)
+    user.shotName: (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
+
+Required user defined parameter:
+    user.ExrCombine: (string) path to "ExrCombine.exe" console program (path.join(getenv("KATANA_HOME", ""), "bin", "ExrCombine.exe"))
 
 ]]
 
 
 
--- get string value from added earlier user-defined attribute that contains path for render outputs
-path_project = Interface.GetAttr("user.shotPath")
-path_project = Attribute.GetStringValue(path_project, "")
+-- get path for render outputs and name of the current shot
+path_project = Attribute.GetStringValue(Interface.GetAttr("user.shotPath"), "")
+name = Attribute.GetStringValue(Interface.GetAttr("user.shotName"), "")
 
--- get string value from added earlier user-defined attribute that contains name of the current shot
-name = Interface.GetAttr("user.shotName")
-name = Attribute.GetStringValue(name, "")
+
+-- get string value of path to "ExrCombine.exe"
+ExrCombine_path = Attribute.GetStringValue(Interface.GetOpArg("user.ExrCombine"), "")
+
+
+-- create global variables to use as buffers
+ExrCombine = ""
+deleteCommand = ""
+scriptCommand = ""
+
+channel_name = ""
 
 
 
@@ -40,40 +51,48 @@ function ArnoldOutput (name, lpe, group)
     if name == "primary" then channel_type = "RGBA" end
 
     -- adjust outputChannel name if LightGroup is set
-    if group == "" then name = name
-    else name = name .. "_" .. group end
+    if group == "" then channel_name = "" .. name .. ""
+    else channel_name = name .. "_" .. group end
 
-    -- add current LPE channel to global variable
-    if channels == "" then channels = name
-    else channels = channels .. "," .. name end
+    if name == "primary" then channel_name = "rgba" end
+
+    if name == "primary" then
+        if group == "" then channel_name = "rgba"
+        else channel_name = "rgba_" .. group end
+    end
+
+
+    -- create path to save channel as temporary "exr" file
+    local combineItem_path = pystring.os.path.join(path_project, string.format("_temp_%s.exr", channel_name) )
+    combineItem_path = pystring.replace(pystring.os.path.normpath(combineItem_path), "\\", "\\")
+
+    -- add path to temporary "exr" file for current channel to "ExrCombine.exe" as argument
+    ExrCombine = ExrCombine .. string.format(' "%s" ', combineItem_path) .. name
+    deleteCommand = deleteCommand .. string.format(' "%s"', combineItem_path)
 
 
     -- create outputChannel by name
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.name", name), StringAttribute(name))
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.type", name), StringAttribute(channel_type))
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.channel", name), StringAttribute(name))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.name", channel_name), StringAttribute(channel_name))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.type", channel_name), StringAttribute(channel_type))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.channel", channel_name), StringAttribute(channel_name))
 
     -- add driver attributes
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.half_precision", name), IntAttribute(0))
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.tiled", name), IntAttribute(0))
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.color_space", name), StringAttribute("linear"))
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.autocrop", name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.half_precision", channel_name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.tiled", channel_name), IntAttribute(0))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.color_space", channel_name), StringAttribute("linear"))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.driverParameters.autocrop", channel_name), IntAttribute(0))
 
     -- set Light Path Expression
-    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.lightPathExpression", name), StringAttribute(lpe))
+    Interface.SetAttr(string.format("arnoldGlobalStatements.outputChannels.%s.lightPathExpression", channel_name), StringAttribute(lpe))
 
 
     -- create render output for current outputChannel
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", name), StringAttribute("raw"))
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.channel", name), StringAttribute(name))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", channel_name), StringAttribute("raw"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.channel", channel_name), StringAttribute(channel_name))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationType", channel_name), StringAttribute("file"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationSettings.renderLocation", channel_name), StringAttribute(combineItem_path))
 
 end
-
-
-
--- global variable that collect all defined in 'RenderOutputDefine' LPE outputChannels as a string
--- and will be used to adjust renderSettings.output attribute
-channels = ""
 
 
 
@@ -133,8 +152,11 @@ function RenderOutputDefine (group, inversion)
     end
 
 
-    -- reset global variable for new render output
-    channels = ""
+    -- reset global variables to default state
+    ExrCombine = pystring.replace(string.format('"%s"', pystring.os.path.normpath(ExrCombine_path)), "\\", "\\")
+
+
+    deleteCommand = "del"
 
 
     -- add 'beauty' channels
@@ -166,15 +188,25 @@ function RenderOutputDefine (group, inversion)
 
 
     -- create full path string to save multi-channeled exr file
-    local path = pystring.os.path.join(path_project, string.format("%s%s.exr", name, file_tag) )
-    path = pystring.replace(path, "\\", "/")
+    local output_path = pystring.os.path.join(path_project, string.format("%s%s.exr", name, file_tag) )
+    output_path = pystring.replace(pystring.os.path.normpath(output_path), "\\", "\\")
 
-    -- Merge all render outputs to multi-channeled exr file
-    -- switch location type to 'file' mode and set 'renderLocation' parameter
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", output), StringAttribute("merge"))
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.mergeOutputs", output), StringAttribute(channels))
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationType", output), StringAttribute("file"))
-    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationSettings.renderLocation", output), StringAttribute(path))
+
+    -- create "cmd" command
+    scriptCommand = ExrCombine .. string.format(' "%s"', output_path)
+
+
+    -- merge all render outputs to multi-channeled exr file
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", output), StringAttribute("script"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.scriptInput", output), StringAttribute(channel_name))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.scriptCommand", output), StringAttribute(scriptCommand))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.scriptHasOutput", output), IntAttribute(0))
+
+    -- delete all temporary "exr" files
+    Interface.SetAttr(string.format("renderSettings.outputs.%s_cleaner.type", output), StringAttribute("script"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s_cleaner.rendererSettings.scriptInput", output), StringAttribute(channel_name))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s_cleaner.rendererSettings.scriptCommand", output), StringAttribute(deleteCommand))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s_cleaner.rendererSettings.scriptHasOutput", output), IntAttribute(0))
 
 end
 
