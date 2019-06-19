@@ -17,12 +17,12 @@ if len(args) > 1:
 	if not os.path.exists(new_path):
 
 		# if argument is directory
-		drive_match = re.match(r'[D-Z]:[\\/].*', new_path)
-		network_match = re.match(r'\\\\.*', new_path)
+		drive_match = re.match(r"[D-Z]:[\\/].*", new_path)
+		network_match = re.match(r"\\\\.*", new_path)
 		if drive_match or network_match:
 
 			# inform of this script
-			print('\n[INFO subdirs.py: {} - directory will be created]\n'.format(new_path))
+			print("[INFO subdirs.py]: {} - directory will be created".format(new_path))
 
 			# create missing directories
 			os.makedirs(new_path)
