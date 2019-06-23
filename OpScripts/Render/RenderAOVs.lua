@@ -6,8 +6,8 @@ renderer: prman
 Add outputChannel attributes for AOVs and create render output as multi-channeled exr file
 
 Required attributes:
-    user.BuiltIn.shotPath: (string) path where result render file will be saved
-    user.BuiltIn.shotName: (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
+    user.BuiltIn.shotPath           (string) path where result render file will be saved
+    user.BuiltIn.shotName           (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
 
 Required user defined parameters:
     user.Holdout.ouputAOVs          (number) switch to include "occluded" and "shadow" channels to multi-channeled exr files
@@ -59,7 +59,9 @@ Required user defined parameters:
                                                        new_parameter.getChildByIndex(1).setValue("varying color (float, vector, normal)", 0)
 
 
-    user.CreateStatisticFile:       (number) switch to create statistic file
+    user.FilenameTag                (string) string that will be added to name of output files
+
+    user.CreateStatisticFile        (number) switch to create statistic file
 
 ]]
 
@@ -109,9 +111,11 @@ local CheckBox_z                 = Attribute.GetFloatValue(Interface.GetOpArg("u
 local CheckBox_outsideIOR        = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.outsideIOR"), 0.0)
 
 -- get switch from user defined parameter to create statistic file
-local CheckBox_StatisticFile = Attribute.GetFloatValue(Interface.GetOpArg("user.CreateStatisticFile"), 0)
+local CheckBox_StatisticFile     = Attribute.GetFloatValue(Interface.GetOpArg("user.CreateStatisticFile"), 0)
 
-
+-- get string value to add to output files
+local FilenameTag               = Attribute.GetStringValue(Interface.GetOpArg("user.FilenameTag"), "")
+if    FilenameTag ~= "" then FilenameTag = "_" .. FilenameTag end
 
 
 -- variable that collect all defined here AOV channels as a string
@@ -232,7 +236,7 @@ local shot_path = Attribute.GetStringValue(Interface.GetAttr("user.shotPath"), "
 local shot_name = Attribute.GetStringValue(Interface.GetAttr("user.shotName"), "")
 
 -- create full path string to save multi-channeled exr file
-local output_path = pystring.os.path.join(shot_path, string.format("%s_aovs.exr", shot_name) )
+local output_path = pystring.os.path.join(shot_path, string.format("%s%s.exr", shot_name, FilenameTag) )
       output_path = pystring.os.path.normpath(output_path)
 
 
@@ -250,7 +254,7 @@ if channel_list ~= "" then
     if CheckBox_StatisticFile > 0.0 then
 
         -- create full path string to save multi-channeled exr file
-        local statistic_path = pystring.os.path.join(shot_path, string.format("%s_aovs.xml", shot_name) )
+        local statistic_path = pystring.os.path.join(shot_path, string.format("%s%s.xml", shot_name, FilenameTag) )
               statistic_path = pystring.os.path.normpath(statistic_path)
 
         -- switch on statistics output
