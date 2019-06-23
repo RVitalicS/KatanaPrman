@@ -3,36 +3,45 @@
 Location: /root
 renderer: prman
 
-Add all defined outputChannels to local outputs
+Create local render outputs from all defined outputChannels
 to use those as interactiveOutputs for viewing in Monitor tab
 
-Also delete all multi-channeled outputs
+Also delete all multi-channeled render outputs
 
 ]]
 
 
-function RenderOutputDefine (channel)
-    --[[ Works the same way as the RenderOutputDefine node ]]
 
-    -- add two attributes grouped by input name
-    -- these two attributes create local render output
-    Interface.SetAttr(string.format ('renderSettings.outputs.%s.type', channel), StringAttribute("raw"))
-    Interface.SetAttr(string.format ('renderSettings.outputs.%s.rendererSettings.channel', channel), StringAttribute(string.format ("%s", channel)))
+
+function RenderOutputDefine (input_channel)
+
+    --[[
+    Works the same way as the RenderOutputDefine node
+
+    Arguments:
+        input_channel  (string): name of outputChannel
+    ]]
+
+    Interface.SetAttr(string.format ('renderSettings.outputs.%s.type', input_channel), StringAttribute("raw"))
+    Interface.SetAttr(string.format ('renderSettings.outputs.%s.rendererSettings.channel', input_channel), StringAttribute(string.format ("%s", input_channel)))
 
 end
 
 
--- get all defined outputChannels then get count of those
+
+
+-- get all defined outputChannels and add each one to local output
 local outputChannels_root = Interface.GetAttr('prmanGlobalStatements.outputChannels')
 if outputChannels_root then local outputChannels_num = outputChannels_root:getNumberOfChildren()
 
-    -- add each outputChannel to local output
     for i = 0, outputChannels_num-1 do RenderOutputDefine(outputChannels_root:getChildName(i)) end
 
 end
 
 
--- get all defined render outputs then get count of those
+
+
+-- get all defined render outputs
 local outputs_root = Interface.GetAttr('renderSettings.outputs')
 if outputs_root then local outputs_num = outputs_root:getNumberOfChildren()
 
