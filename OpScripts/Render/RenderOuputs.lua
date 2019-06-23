@@ -178,7 +178,7 @@ function OutputChannelDefine (input_name, input_lpe, input_group, input_type)
     ]]
 
 
-    -- set default value for the "type" argument
+    -- set default value for the "input_type" argument
     input_type = input_type or "varying color"
 
     -- adjust outputChannel name if LightGroup is set
