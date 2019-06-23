@@ -7,15 +7,17 @@ Add outputChannel attributes for each LightGroup
 and create render outputs as multi-channeled exr files
 
 Required attributes:
-    user.shotPath: (string) path where result render file will be saved
-    user.shotName: (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
+    user.shotPath             (string) path where result render file will be saved
+    user.shotName             (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
 
 Required user defined parameters:
-    user.ExrCombine:          (string) path to "ExrCombine.exe" console program (path.join(getenv("KATANA_HOME", ""), "bin", "ExrCombine.exe"))
+    user.ExrCombine           (string) path to "ExrCombine.exe" console program (path.join(getenv("KATANA_HOME", ""), "bin", "ExrCombine.exe"))
 
-    user.LightGrouped:        (number) switch to generate separated output files for each light with defined group name
+    user.LightGrouped         (number) switch to generate separated output files for each light with defined group name
 
-    user.CreateStatisticFile: (number) switch to create statistic file
+    user.CreateStatisticFile  (number) switch to create statistic file
+
+    user.beauty                                           (number) switch to include "Ci,a" channels to multi-channeled exr files
 
     user.BasicOutputs.directDiffuse                       (number) switch to include "directDiffuse" channel to multi-channeled exr files
     user.BasicOutputs.indirectDiffuse                     (number) ...
@@ -44,17 +46,32 @@ Required user defined parameters:
     user.PerLobeOutputs.subsurfaceLobe                    (number) ...
     user.PerLobeOutputs.emissive                          (number) ...
 
+    user.Extra. ...                                       (string array) optionally generated parameter with python script (button) for custom lpe:
+
+                                                                         user_parameter = NodegraphAPI.GetNode("RenderOutputs").getParameter("user.Extra")
+                                                                         new_parameter = user_parameter.createChildStringArray("LPE1", 2)
+
+                                                                         new_parameter.getChildByIndex(0).setValue("lpeName", 0)
+                                                                         new_parameter.getChildByIndex(1).setValue("color lpe:C.*[<L.>O]", 0)
+
+
+    user.FilenameTag                                      (string) string that will be added to name of output files
+
 ]]
 
 
 
 
 -- get path for render outputs and name of the current shot
-local shot_path                                  = Attribute.GetStringValue(Interface.GetAttr("user.shotPath"), "")
-local shot_name                                  = Attribute.GetStringValue(Interface.GetAttr("user.shotName"), "")
+local shot_path                                 = Attribute.GetStringValue(Interface.GetAttr("user.shotPath"), "")
+local shot_name                                 = Attribute.GetStringValue(Interface.GetAttr("user.shotName"), "")
 
 -- get string value of path to "ExrCombine.exe"
-local ExrCombine_path                            = Attribute.GetStringValue(Interface.GetOpArg("user.ExrCombine"), "")
+local ExrCombine_path                           = Attribute.GetStringValue(Interface.GetOpArg("user.ExrCombine"), "")
+
+-- get string value to add to output files
+local FilenameTag                               = Attribute.GetStringValue(Interface.GetOpArg("user.FilenameTag"), "")
+if    FilenameTag ~= "" then FilenameTag = "_" .. FilenameTag end
 
 -- get switch from user defined parameter to separate output files
 local lightGroupedOutputs                        = Attribute.GetFloatValue(Interface.GetOpArg("user.LightGrouped"), 0)
@@ -64,6 +81,8 @@ local CheckBox_StatisticFile                     = Attribute.GetFloatValue(Inter
 
 
 -- get switches to include channel to multi-channeled exr files
+local CheckBox_beauty                            = Attribute.GetFloatValue(Interface.GetOpArg("user.beauty"), 0.0)
+
 local CheckBox_directDiffuse                     = Attribute.GetFloatValue(Interface.GetOpArg("user.BasicOutputs.directDiffuse"), 0.0)
 local CheckBox_indirectDiffuse                   = Attribute.GetFloatValue(Interface.GetOpArg("user.BasicOutputs.indirectDiffuse"), 0.0)
 local CheckBox_directSpecular                    = Attribute.GetFloatValue(Interface.GetOpArg("user.BasicOutputs.directSpecular"), 0.0)
@@ -122,10 +141,17 @@ local Group_PerLobeOutputs = {
     CheckBox_emissive_lobe}
 
 
+
 -- check if there is at least one channel included
 -- check if at least one PerLobe channel included
 local hasOutputs = false
 local hasLobes  = false
+
+
+if CheckBox_beauty > 0.0 then
+    hasOutputs = true
+end
+
 
 for i=1, #Group_BasicOutputs do
     if Group_BasicOutputs[i] > 0.0 then
@@ -133,12 +159,34 @@ for i=1, #Group_BasicOutputs do
     end
 end
 
+
 for i=1, #Group_PerLobeOutputs do
     if Group_PerLobeOutputs[i] > 0.0 then
         hasOutputs = true
         hasLobes  = true
     end
 end
+
+
+local extraLPEs = Interface.GetOpArg("user.Extra")
+local extraDefaults = {"lpeName", "color lpe:C.*[<L.>O]"}
+
+for i=2, extraLPEs:getNumberOfChildren() do
+    local extraLPE_Item = extraLPEs:getChildByIndex(i-1):getNearestSample(0)
+
+    local extraL_channel_name = extraLPE_Item[1]
+    local extraL_channel_lpe  = extraLPE_Item[2]
+
+    if extraL_channel_name ~= extraDefaults[1] and extraL_channel_lpe ~= extraDefaults[2] then
+        if extraL_channel_name ~= "" and extraL_channel_lpe ~= "" then
+
+            hasOutputs = true
+
+        end
+    end
+
+end
+
 
 
 -- to correctly render PerLobe LPE in Katana, you need to declare how these are routed to the outputs
@@ -179,7 +227,7 @@ function OutputChannelDefine (input_name, input_lpe, input_group, input_type)
 
 
     -- set default value for the "input_type" argument
-    input_type = input_type or "varying color"
+    input_type  = input_type  or "varying color"
 
     -- adjust outputChannel name if LightGroup is set
     if input_group == "" then channel_name = "" .. input_name .. ""
@@ -243,12 +291,12 @@ function RenderOutput (input_group, inversion_flag)
 
 
     -- define expression and output name tag variables as arguments for "OutputChannelDefine" function
-    local lpe_value = ""
-    local lpe_group = ""
+    local lpe_value  = ""
+    local lpe_group  = ""
 
     -- define tag and output variables to adjust renderSettings.output attribute
-    local file_tag  = ""
-    local output    = "multichanneled"
+    local group_tag  = ""
+    local output     = "multichanneled"
 
 
     -- adjust variables depending on input arguments:
@@ -273,27 +321,28 @@ function RenderOutput (input_group, inversion_flag)
         -- adjust variables
         lpe_value = string.format("[^%s]", all_groups)
         lpe_group = "default"
-        file_tag  = "_" .. lpe_group .. "LightGroup"
-        output    = output .. file_tag
+        group_tag = "_" .. lpe_group .. "LightGroup"
+        output    = output .. group_tag
 
     else -- create expression part for single LightGroup
 
         -- adjust variables
         lpe_value = string.format("['%s']", input_group)
         lpe_group = input_group
-        file_tag  = "_" .. lpe_group .. "LightGroup"
-        output    = output .. file_tag
+        group_tag = "_" .. lpe_group .. "LightGroup"
+        output    = output .. group_tag
     end
 
 
     -- reset global variables to default state
-    ExrCombine = string.format('"%s"', pystring.os.path.normpath(ExrCombine_path))
-
+    ExrCombine    = string.format('"%s"', pystring.os.path.normpath(ExrCombine_path))
     deleteCommand = "del"
 
+
     -- add "Ci" and "a" channels
-    OutputChannelDefine("Ci", string.format("color lpe:C.*[<L.%s>O]", lpe_value), lpe_group)
+    if CheckBox_beauty > 0.0 then
     OutputChannelDefine("a", "", "", "varying float")
+    OutputChannelDefine("Ci", string.format("color lpe:C.*[<L.%s>O]", lpe_value), lpe_group) end
 
 
     -- add channels for PerLobe LPE workflow
@@ -339,8 +388,27 @@ function RenderOutput (input_group, inversion_flag)
                                                            OutputChannelDefine("emissive",                        string.format("color lpe:C[<L.%s>O]",           lpe_value), lpe_group) end
 
 
+    -- add extra lpe channels
+    for i=2, extraLPEs:getNumberOfChildren() do
+        local extraLPE_Item = extraLPEs:getChildByIndex(i-1):getNearestSample(0)
+
+        local extraL_channel_name = extraLPE_Item[1]
+        local extraL_channel_lpe  = extraLPE_Item[2]
+
+        if extraL_channel_name ~= extraDefaults[1] and extraL_channel_lpe ~= extraDefaults[2] then
+            if extraL_channel_name ~= "" and extraL_channel_lpe ~= "" then
+
+                OutputChannelDefine(extraL_channel_name, extraL_channel_lpe, lpe_group)
+
+            end
+        end
+
+    end
+
+
+
     -- create full path string to save multi-channeled exr file
-    local output_path = pystring.os.path.join(shot_path, string.format("%s%s.exr", shot_name, file_tag) )
+    local output_path = pystring.os.path.join(shot_path, string.format("%s%s%s.exr", shot_name, FilenameTag, group_tag) )
           output_path = pystring.os.path.normpath(output_path)
 
     -- create "cmd" command
@@ -374,8 +442,8 @@ for i=0, light_list:getNumberOfChildren()-1 do
 
     -- get SceneGraph path of current light
     local light_attributes = light_list:getChildByIndex(i)
-    local SceneGraph_path = light_attributes:getChildByName("path")
-          SceneGraph_path = Attribute.GetStringValue(SceneGraph_path, "")
+    local SceneGraph_path  = light_attributes:getChildByName("path")
+          SceneGraph_path  = Attribute.GetStringValue(SceneGraph_path, "")
 
     -- get LightGroup of current light
     local light_group = Interface.GetGlobalAttr("material.prmanLightParams.lightGroup", SceneGraph_path)
@@ -464,7 +532,7 @@ if hasOutputs then
     if CheckBox_StatisticFile > 0.0 then
 
         -- create full path string to save multi-channeled exr file
-        local statistic_path = pystring.os.path.join(shot_path, string.format("%s_primary.xml", shot_name) )
+        local statistic_path = pystring.os.path.join(shot_path, string.format("%s%s.xml", shot_name, FilenameTag) )
               statistic_path = pystring.os.path.normpath(statistic_path)
 
         -- switch on statistics output
