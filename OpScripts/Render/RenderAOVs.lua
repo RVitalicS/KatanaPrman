@@ -10,6 +10,8 @@ Required attributes:
     user.BuiltIn.shotName: (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
 
 Required user defined parameters:
+    user.Holdout.ouputAOVs          (number) switch to include "occluded" and "shadow" channels to multi-channeled exr files
+
     user.BuiltIn.Ci                 (number) switch to include built-in AOV channel to multi-channeled exr files
     user.BuiltIn.a                  (number) ...
     user.BuiltIn.time               (number) ...
@@ -56,6 +58,9 @@ Required user defined parameters:
                                                        new_parameter.getChildByIndex(0).setValue("aovName", 0)
                                                        new_parameter.getChildByIndex(1).setValue("varying color (float, vector, normal)", 0)
 
+
+    user.CreateStatisticFile:       (number) switch to create statistic file
+
 ]]
 
 
@@ -63,6 +68,8 @@ Required user defined parameters:
 
 
 -- get switches to include channel to multi-channeled exr files
+local CheckBox_holdouts          = Attribute.GetFloatValue(Interface.GetOpArg("user.Holdout.ouputAOVs"), 0.0)
+
 local CheckBox_Ci                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Ci"), 0.0)
 local CheckBox_a                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.a"), 0.0)
 local CheckBox_time              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.time"), 0.0)
@@ -101,6 +108,8 @@ local CheckBox_VLen              = Attribute.GetFloatValue(Interface.GetOpArg("u
 local CheckBox_z                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.z"), 0.0)
 local CheckBox_outsideIOR        = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.outsideIOR"), 0.0)
 
+-- get switch from user defined parameter to create statistic file
+local CheckBox_StatisticFile = Attribute.GetFloatValue(Interface.GetOpArg("user.CreateStatisticFile"), 0)
 
 
 
@@ -111,7 +120,7 @@ local channel_list = ""
 
 
 
-function PrmanOutputChannelDefine (input_name, input_type)
+function PrmanOutputChannelDefine (input_name, input_type, input_lpe)
 
     --[[
     Works the same way as the PrmanOutputChannelDefine node plus collect defined channels
@@ -119,8 +128,12 @@ function PrmanOutputChannelDefine (input_name, input_type)
     Arguments:
         input_name  (string): name of outputChannel
         input_type  (string): type of channel data
+        input_lpe   (string): Light Path Expression ("color lpe:C.*[<L.>O]")
     ]]
 
+
+    -- set default value for the "input_lpe" argument
+    input_lpe = input_lpe or ""
 
     -- add current AOV channel to global variable
     if channel_list == "" then
@@ -133,13 +146,18 @@ function PrmanOutputChannelDefine (input_name, input_type)
     Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.type", input_name), StringAttribute(input_type))
     Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.name", input_name), StringAttribute(input_name))
 
+        -- set Light Path Expression
+    if input_lpe ~= "" then
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.type", input_name), StringAttribute("string"))
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.value", input_name), StringAttribute(input_lpe))
+    end
+
 end
 
 
 
 
-
--- add channels to include to multi-channeled exr files
+-- add built-in AOV channels to include to multi-channeled exr files
 if CheckBox_Ci > 0.0 then                PrmanOutputChannelDefine("Ci",                "varying color")  end
 if CheckBox_a > 0.0 then                 PrmanOutputChannelDefine("a",                 "varying float")  end
 if CheckBox_time > 0.0 then              PrmanOutputChannelDefine("time",              "varying float")  end
@@ -179,6 +197,10 @@ if CheckBox_z > 0.0 then                 PrmanOutputChannelDefine("z",          
 if CheckBox_outsideIOR > 0.0 then        PrmanOutputChannelDefine("outsideIOR",        "varying float")  end
 
 
+-- add holdout channels to include to multi-channeled exr files
+if CheckBox_holdouts > 0.0 then          PrmanOutputChannelDefine("occluded",          "varying color", "color lpe:holdouts;C[DS]+<L.>")
+                                         PrmanOutputChannelDefine("shadow",            "varying color", "color lpe:holdouts;unoccluded;C[DS]+<L.>") end
+
 
 
 -- optionally create aov channels to include to multi-channeled exr files
@@ -217,8 +239,24 @@ local output_path = pystring.os.path.join(shot_path, string.format("%s_aovs.exr"
 
 -- Create one render output for chosen AOV outputChannels
 if channel_list ~= "" then
+
     Interface.SetAttr('renderSettings.outputs.aovs.type', StringAttribute("raw"))
     Interface.SetAttr('renderSettings.outputs.aovs.rendererSettings.channel', StringAttribute(channel_list))
     Interface.SetAttr('renderSettings.outputs.aovs.locationType', StringAttribute("file"))
     Interface.SetAttr('renderSettings.outputs.aovs.locationSettings.renderLocation', StringAttribute(output_path))
+
+
+        -- create statistic file at will
+    if CheckBox_StatisticFile > 0.0 then
+
+        -- create full path string to save multi-channeled exr file
+        local statistic_path = pystring.os.path.join(shot_path, string.format("%s_aovs.xml", shot_name) )
+              statistic_path = pystring.os.path.normpath(statistic_path)
+
+        -- switch on statistics output
+        Interface.SetAttr("prmanGlobalStatements.options.statistics.level", IntAttribute(1))
+        Interface.SetAttr("prmanGlobalStatements.options.statistics.xmlfilename", StringAttribute(statistic_path))
+    end
+
+
 end
