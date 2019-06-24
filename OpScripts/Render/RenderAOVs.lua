@@ -141,19 +141,23 @@ function PrmanOutputChannelDefine (input_name, input_type, input_lpe)
 
     -- add current AOV channel to global variable
     if channel_list == "" then
-        channel_list = input_name
+        channel_list = "" .. input_name .. ""
     else
         channel_list = channel_list .. "," .. input_name
     end
 
+    -- edit name for single channel output (replace dot character by underscore)
+    local outputChannel_name = "" .. input_name .. ""
+          outputChannel_name = outputChannel_name:gsub("%.", "_")
+
     -- create outputChannel
-    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.type", input_name), StringAttribute(input_type))
-    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.name", input_name), StringAttribute(input_name))
+    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.type", outputChannel_name), StringAttribute(input_type))
+    Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.name", outputChannel_name), StringAttribute(input_name))
 
         -- set Light Path Expression
     if input_lpe ~= "" then
-        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.type", input_name), StringAttribute("string"))
-        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.value", input_name), StringAttribute(input_lpe))
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.type", outputChannel_name), StringAttribute("string"))
+        Interface.SetAttr(string.format("prmanGlobalStatements.outputChannels.%s.params.source.value", outputChannel_name), StringAttribute(input_lpe))
     end
 
 end
@@ -216,11 +220,16 @@ for i=2, extraAOVs:getNumberOfChildren() do
 
     local channel_name = extraAOV_Item[1]
     local channel_type = extraAOV_Item[2]
+    local cahennl_lpe  = "" .. channel_name .. ""
+
+    if channel_type == "varying float" then
+        channel_name = channel_name .. ".r"
+    end
 
     if channel_name ~= extraDefaults[1] and channel_type ~= extraDefaults[2] then
         if channel_name ~= "" and channel_type ~= "" then
 
-            PrmanOutputChannelDefine(channel_name, channel_type)
+            PrmanOutputChannelDefine(channel_name, channel_type, cahennl_lpe)
 
         end
     end
