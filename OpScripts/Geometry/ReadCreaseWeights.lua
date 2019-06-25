@@ -1,12 +1,13 @@
 --[[
 
-location: /root/world/geo//*{hasattr("geometry.arbitrary.creaseweight")}
-renderer: prman
+    location: /root/world/geo//*{hasattr("geometry.arbitrary.creaseweight")}
+    renderer: prman
 
-Read arbitrary 'creaseweight' attribute
-and convert it to required Renderman format
+    Read arbitrary 'creaseweight' attribute (from Houdini)
+    and convert it to required Renderman format
 
 ]]
+
 
 
 -- get creaseweight attribute
@@ -20,6 +21,7 @@ startIndex = startIndex:getNearestSample(0.0)
 -- get vertexList attribute that contains links from vertex to point
 local vertexList = Interface.GetAttr('geometry.poly.vertexList')
 vertexList = vertexList:getNearestSample(0.0)
+
 
 
 -- collect polygons as point groups
@@ -40,6 +42,7 @@ for i=1, #startIndex do
         polygonList[#polygonList+1] = pointGroup
     end
 end
+
 
 
 -- collect point pairs with direct and reverse order
@@ -100,10 +103,12 @@ for i=1, #polygonList do
 end
 
 
+
 -- create value variables to set attributes later
 local creaseLengths = {}
 local creaseIndices = {}
 local creaseSharpness = {}
+
 
 -- compare pairs with direct order and pairs with reverse order
 for i=1, #pairsDirect do
@@ -128,12 +133,15 @@ for i=1, #pairsDirect do
 end
 
 
+
 -- get value from user defined 'creaseMultiplier' parameter
 local creaseMultiplier = Interface.GetOpArg('user.creaseMultiplier')
 creaseMultiplier = Attribute.GetFloatValue(creaseMultiplier, 0.0)
 
 -- multiply values in creaseweight attribute
 for i=1, #creaseSharpness do creaseSharpness[i]=creaseSharpness[i]*creaseMultiplier end
+
+
 
 -- set crease attributes
 Interface.SetAttr('geometry.creaseLengths', IntAttribute(creaseLengths))
