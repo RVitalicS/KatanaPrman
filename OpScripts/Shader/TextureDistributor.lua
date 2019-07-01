@@ -1,32 +1,93 @@
 --[[
 
-Location: //*{attr("materialAssign")=="PxrMasterSurface"}
-renderer: prman
+    location: //*{attr("materialAssign")=="PxrMasterSurface"}
+    renderer: prman
 
-Adds "textures.xxx" attribute with texture distribution
 
-Examples:
-    //path/name<15>.tex        (randomly replace number in brackets with number from 01 to 15 depending on node name)
-    //path/name<15-10,05>.tex  (randomly replace number in brackets with number from 15 to 10 or with 05 depending on node name)
+    Adds "textures.xxx" attibute (with texture distribution option)
+    that will be used in shader parameter at render start
+
+    Examples:
+        //path/name<15>.tex        (randomly replace number in brackets with number from 01 to 15 depending on node name)
+        //path/name<15-10,05>.tex  (randomly replace number in brackets with number from 15 to 10 or with 05 depending on node name)
+
+
+    Required user defined parameters:
+        user.diffuseColor      (string): parameter with texure path (<sequence> expression)
+        user.primSpecEdgeColor (string): ...
+        ...
+
+        user.textureSeed       (number): seed number to change variations of textures distribution
 
 ]]
 
 
 
--- get seed value from user defined parameter to add it to local seed
-globalSeed = Attribute.GetFloatValue(Interface.GetOpArg("user.globalSeed"), 0)
+
+
+function RandomChoice ( input_table, input_seed )
+
+    --[[
+        Randomly choices item from input table
+        depending on name of current location basename
+
+        Arguments:
+            input_table  (table): list to choose from
+            input_seed  (number): seed number (at will)
+
+        Return:
+            (*): randomly choiced item from list
+    ]]
+
+
+    -- set default value seed
+    input_seed = input_seed or 0
+
+
+    -- get current node name and create random seed
+    local input_name = pystring.os.path.basename(Interface.GetInputLocationPath())
+    local local_seed = 0
+
+    for i in string.gmatch(input_name, ".") do
+        math.randomseed(string.byte(i))
+        local_seed = math.random(9) + local_seed
+        math.randomseed(local_seed + input_seed)
+    end
+
+
+    -- return random item from input table
+    if #input_table > 0 then
+        return input_table[math.random(#input_table)] else
+        return nil end
+
+end
 
 
 
-function DistributeTextures (sequenceString, attributeName)
 
-    --[[ Adds "textures.xxx" attribute with texture distribution ]]
+
+function DistributeTexture ( input_attribute, input_texture, input_seed )
+
+    --[[
+        Adds "textures.xxx" attibute with texture distribution option
+
+        Arguments:
+            input_attribute  (string): attribute name that will be used in shader parameter
+            input_texture    (string): path to texture with or without expression
+            input_seed       (number): seed number  (at will)
+    ]]
+
+
+    -- set default value seed
+    input_seed = input_seed or 0
 
 
     -- run if parameter value is valid
-    -- and it has sequence expression
-    if sequenceString ~= "" then
-        local sequenceExpression = string.match(sequenceString, "<.+>")
+    if input_texture ~= "" then
+
+
+        -- if it has sequence expression
+        local sequenceExpression = string.match(input_texture, "<.+>")
         if sequenceExpression then
 
 
@@ -91,35 +152,49 @@ function DistributeTextures (sequenceString, attributeName)
             end
 
 
-            -- get current node name and create random seed
-            local nodeName = pystring.os.path.basename(Interface.GetInputLocationPath())
-            local localSeed = ""
-
-            for i in string.gmatch(nodeName, ".") do
-                math.randomseed(string.byte(i))
-                localSeed = string.format("%s%s", math.random(9), localSeed)
-            end
-
-            math.randomseed(tonumber(localSeed) + globalSeed)
-
-
             -- create string with specific file path and set attribute
-            local path_head, sequence, path_tail = string.match(sequenceString, "(.+)(<.+>)(.+)")
+            local path_head, sequence, path_tail = string.match(input_texture, "(.+)(<.+>)(.+)")
             local textureFormat = path_head .. string.format("%%0%sd", sequenceLength) .. path_tail
 
-            local textureString = string.format(textureFormat, possibleNumbers[math.random(#possibleNumbers)])
-            Interface.SetAttr(string.format("textures.%s", attributeName), StringAttribute(textureString))
+            local textureString = string.format(textureFormat, RandomChoice(possibleNumbers, input_seed))
+                  textureString = pystring.replace(textureString, "\\", "/")
 
-        end
+            Interface.SetAttr(string.format("textures.%s", input_attribute), StringAttribute(textureString))
+
+
+
+        -- if it has not sequence expression
+        -- set attribute with input file path
+        else
+            input_texture = pystring.replace(input_texture, "\\", "/")
+            Interface.SetAttr(string.format("textures.%s", input_attribute), StringAttribute(input_texture)) end
+
     end
 end
 
 
 
--- distribute textures for all defined parameters
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.diffuseSequence"), ""), "diffuseColor")
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.primSpecEdgeSequence"), ""), "primSpecEdgeColor")
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.primSpecRoughnessSequence"), ""), "primSpecRoughness")
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.normalSequence"), ""), "normal")
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.bumpSequence"), ""), "bump")
-DistributeTextures(Attribute.GetStringValue(Interface.GetOpArg("user.displacementScalarSequence"), ""), "displacementScalar")
+
+
+-- get seed for texture distribution
+local textureSeed = Attribute.GetFloatValue(Interface.GetOpArg("user.textureSeed"), 0)
+
+
+
+-- for all used fields for setting shader parameters at rendertime create "textures.xxx" attributes
+local textures_group = Interface.GetOpArg("user")
+local child_count = textures_group:getNumberOfChildren()
+
+if child_count > 0 then
+    for index=0, child_count-1 do
+
+        local child_name = textures_group:getChildName(index)
+        local child_attr = Interface.GetOpArg(string.format("user.%s", child_name))
+
+        if Attribute.IsString(child_attr) then
+            local child_value = Attribute.GetStringValue(child_attr, "")
+
+            DistributeTexture(child_name, child_value, textureSeed) end
+
+    end
+end
