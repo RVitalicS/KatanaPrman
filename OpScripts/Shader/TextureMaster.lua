@@ -1,14 +1,14 @@
 --[[
 
-Location: //*{hasattr("geometry.arbitrary.diffuseColor")} + ...
-renderer: prman
+    location: //*{hasattr("geometry.arbitrary.diffuseColor")} + ...
+    renderer: prman
 
-Creates string attributes that will be automatically read by RenderMan
-and passed from the geometry to shader parameters at render time
+    Creates string attributes that will be automatically read by RenderMan
+    and passed from the geometry to shader parameters at render time
 
-Required User Parameters:
-    user.texturesPath: (string) path to created textures
-    user.defaultsPath: (string) path to default textures
+    Required User Parameters:
+        user.texturesPath  (string): path to created textures
+        user.defaultsPath  (string): path to default textures
 
 ]]
 
@@ -21,8 +21,13 @@ local shader_parameters = {
     "primSpecRefractionIndex",
     "primSpecExtinctionCoefficient",
     "primSpecRoughness",
+    "subsurfaceColor",
+    "subsurfaceDmfpColor",
+    "singlescatterColor",
+    "singlescatterMfpColor",
     "normal",
     "bump",
+    "presence",
     "mask",
     "displacementScalar",
     "displacementVector"}
@@ -55,7 +60,9 @@ for i=1, #shader_parameters do
     -- create full path to default texture file and set parameter
     else
         local path = defaultsPath .. string.format("/%s_MAPID_.tex", attr)
-        Interface.SetAttr(string.format("textures.%s", attr), StringAttribute(path))
+
+        if  Interface.GetAttr(string.format("textures.%s", attr)) == nil then
+            Interface.SetAttr(string.format("textures.%s", attr), StringAttribute(path)) end
 
     end
 end
