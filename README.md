@@ -1,14 +1,11 @@
 # Resources for Foundry Katana rendering program
 
 
-## Plug-ins and customizations
+## Customizations
 
-Here is set of sub-directories
-that are used by different parts of the program.
+Here is set of sub-directories (except "OpScripts") that are used by different parts of the program
 
 
 ## OpScripts
 
-There are scripts for defining LPEs, AOVs or Holdouts
-with output files in single node, some for working with LightGroups,
-some for working with render statistic and some for working with geometry attributes.
+There are scripts for working with instances, levels of details, render outputs, texture distributions end etc.
