@@ -4,7 +4,7 @@
     renderer: prman
 
 
-    Adds "textures.xxx" attibute (with texture distribution option)
+    Adds "textures.xxx" attribute (with texture distribution option)
     that will be used in shader parameter at render start
 
     Examples:
@@ -13,7 +13,7 @@
 
 
     Required user defined parameters:
-        user.diffuseColor      (string): parameter with texure path (<sequence> expression)
+        user.diffuseColor      (string): parameter with texture path (<sequence> expression)
         user.primSpecEdgeColor (string): ...
         ...
 
@@ -36,7 +36,7 @@ function RandomChoice ( input_table, input_seed )
             input_seed  (number): seed number (at will)
 
         Return:
-            (*): randomly choiced item from list
+            (*): randomly chosen item from list
     ]]
 
 
@@ -69,7 +69,7 @@ end
 function DistributeTexture ( input_attribute, input_texture, input_seed )
 
     --[[
-        Adds "textures.xxx" attibute with texture distribution option
+        Adds "textures.xxx" attribute with texture distribution option
 
         Arguments:
             input_attribute  (string): attribute name that will be used in shader parameter
@@ -181,7 +181,7 @@ local textureSeed = Attribute.GetFloatValue(Interface.GetOpArg("user.textureSeed
 
 
 
--- for all used fields for setting shader parameters at rendertime create "textures.xxx" attributes
+-- for all used fields for setting shader parameters at render time create "textures.xxx" attributes
 local textures_group = Interface.GetOpArg("user")
 local child_count = textures_group:getNumberOfChildren()
 
