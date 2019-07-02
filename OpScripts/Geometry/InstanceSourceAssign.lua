@@ -260,8 +260,8 @@ function BoundCollector ( input_location, input_diver, input_boundMin, input_bou
     input_diver    = input_diver    or 10
   
      -- recursive vector collectors
-    input_boundMin = input_boundMin or Imath.V3d({0.0, 0.0, 0.0})
-    input_boundMax = input_boundMax or Imath.V3d({0.0, 0.0, 0.0})
+    input_boundMin = input_boundMin or Imath.V3d(0.0, 0.0, 0.0)
+    input_boundMax = input_boundMax or Imath.V3d(0.0, 0.0, 0.0)
   
 
     -- search "bound" attribute
@@ -269,8 +269,8 @@ function BoundCollector ( input_location, input_diver, input_boundMin, input_bou
     if attrBound then  attrBound = attrBound:getNearestSample(0)
       
         -- create vectors for minimum and maximum values for found bounding box
-        local boundMin = Imath.V3d({attrBound[1], attrBound[3], attrBound[5]})
-        local boundMax = Imath.V3d({attrBound[2], attrBound[4], attrBound[6]})
+        local boundMin = Imath.V3d(attrBound[1], attrBound[3], attrBound[5])
+        local boundMax = Imath.V3d(attrBound[2], attrBound[4], attrBound[6])
       
         -- update values for output vectors
         if boundMin.x < input_boundMin.x then input_boundMin.x = boundMin.x end
@@ -310,8 +310,8 @@ function BoundCollector ( input_location, input_diver, input_boundMin, input_bou
     if attrXform then
 
         -- recalculate bounding box
-        local boundMin = Imath.V3d({boundBox[1], boundBox[3], boundBox[5]}) * attrXform
-        local boundMax = Imath.V3d({boundBox[2], boundBox[4], boundBox[6]}) * attrXform
+        local boundMin = Imath.V3d(boundBox[1], boundBox[3], boundBox[5]) * attrXform
+        local boundMax = Imath.V3d(boundBox[2], boundBox[4], boundBox[6]) * attrXform
 
         boundBox = {
             boundMin.x, boundMax.x,
@@ -721,21 +721,14 @@ if maskAccepted then
         local source = RandomChoice(instanceSource, sourceSeed)
         if source then
             
-            -- get bound attribute for input SceneGraph location
-            local bounding_box = BoundCollector(source, boundGeneration)
-          
-            local min = Imath.V3d(bounding_box[1], bounding_box[3], bounding_box[5])
-            local max = Imath.V3d(bounding_box[2], bounding_box[4], bounding_box[6])
+
+            -- define object and camera positions
+            local geoCenter = Imath.V3d(0.0, 0.0, 0.0)
+            local camCenter = Imath.V3d(0.0, 0.0, 0.0)
 
 
             -- apply all transformations from parent nodes
-            min = XformCollector(min)
-            max = XformCollector(max)
-          
-
-            -- define object and camera positions
-            local geoCenter = (max-min)/2 + min
-            local camCenter = Imath.V3d(0.0, 0.0, 0.0)
+            geoCenter = XformCollector(geoCenter)
           
 
             -- get camera "xform" attribute
