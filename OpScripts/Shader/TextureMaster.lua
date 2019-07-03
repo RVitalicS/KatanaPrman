@@ -16,21 +16,43 @@
 
 -- possible tags
 local shader_parameters = {
+    "diffuseGain",
     "diffuseColor",
+    "diffuseRoughness",
     "primSpecEdgeColor",
     "primSpecRefractionIndex",
-    "primSpecExtinctionCoefficient",
+    "primSpecExtinctionCoeff",
     "primSpecRoughness",
+    "roughSpecEdgeColor",
+    "roughSpecRefractionIndex",
+    "roughSpecExtinctionCoeff",
+    "roughSpecRoughness",
+    "clearcoatEdgeColor",
+    "clearcoatRefractionIndex",
+    "clearcoatRoughness",
+    "iridescenceFaceGain",
+    "iridescenceEdgeGain",
+    "iridescenceRoughness",
+    "iridescenceThickness",
+    "fuzzColor",
     "subsurfaceColor",
     "subsurfaceDmfpColor",
     "singlescatterColor",
     "singlescatterMfpColor",
-    "normal",
+    "glassRefractionGain",
+    "glassReflectionGain",
+    "glassRefractionColor",
+    "glassRoughness",
+    "anisotropy",
+    "anisotropyDirection",
+    "glowColor",
     "bump",
+    "normal",
     "presence",
-    "mask",
     "displacementScalar",
-    "displacementVector"}
+    "displacementVector",
+    "mask",
+    "dirtColor"}
 
 
 
