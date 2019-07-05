@@ -1,67 +1,37 @@
 --[[
 
-Location: /root
-renderer: prman
+    location: /root
+    renderer: prman
 
-Add outputChannel attributes for AOVs and create render output as multi-channeled exr file
+    Add outputChannel attributes for AOVs and create render output as multi-channeled exr file
 
-Required attributes:
-    user.BuiltIn.shotPath           (string) path where result render file will be saved
-    user.BuiltIn.shotName           (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
+    Required attributes:
+        user.BuiltIn.shotPath           (string) path where result render file will be saved
+        user.BuiltIn.shotName           (string) frame numbered name ("shotName_F%03d"%frame -> AttributeSet)
 
-Required user defined parameters:
-    user.Holdout.ouputAOVs          (number) switch to include "occluded" and "shadow" channels to multi-channeled exr files
+    Required user defined parameters:
+        user.Holdout.outputAOVs          (number) switch to include "occluded" and "shadow" channels to multi-channeled exr file
 
-    user.BuiltIn.Ci                 (number) switch to include built-in AOV channel to multi-channeled exr files
-    user.BuiltIn.a                  (number) ...
-    user.BuiltIn.time               (number) ...
-    user.BuiltIn.Oi                 (number) ...
-    user.BuiltIn.id                 (number) ...
-    user.BuiltIn.rawId              (number) ...
-    user.BuiltIn.cpuTime            (number) ...
-    user.BuiltIn.sampleCount        (number) ...
-    user.BuiltIn.curvature          (number) ...
-    user.BuiltIn.mpSize             (number) ...
-    user.BuiltIn.biasR              (number) ...
-    user.BuiltIn.biasT              (number) ...
-    user.BuiltIn.incidentRayRadius  (number) ...
-    user.BuiltIn.incidentRaySpread  (number) ...
-    user.BuiltIn.P                  (number) ...
-    user.BuiltIn.Po                 (number) ...
-    user.BuiltIn.dPdu               (number) ...
-    user.BuiltIn.dPdv               (number) ...
-    user.BuiltIn.dPdw               (number) ...
-    user.BuiltIn.PRadius            (number) ...
-    user.BuiltIn.du                 (number) ...
-    user.BuiltIn.dv                 (number) ...
-    user.BuiltIn.dw                 (number) ...
-    user.BuiltIn.u                  (number) ...
-    user.BuiltIn.v                  (number) ...
-    user.BuiltIn.w                  (number) ...
-    user.BuiltIn.Ngn                (number) ...
-    user.BuiltIn.Nn                 (number) ...
-    user.BuiltIn.dPdtime            (number) ...
-    user.BuiltIn.Non                (number) ...
-    user.BuiltIn.motionBack         (number) ...
-    user.BuiltIn.motionFore         (number) ...
-    user.BuiltIn.Tn                 (number) ...
-    user.BuiltIn.Vn                 (number) ...
-    user.BuiltIn.VLen               (number) ...
-    user.BuiltIn.z                  (number) ...
-    user.BuiltIn.outsideIOR         (number) ...
+        user.BuiltIn.Ci                 (number) switch to include built-in AOV channel to multi-channeled exr file
+        user.BuiltIn.a                  (number) ...
+        ...
 
-    user.Extra. ...                 (string array) optionally generated parameter with python script (button):
+        user.Tee.diffuseColor           (number) switch to include unchanged shader value for diffuse color to multi-channeled exr file
+        user.Tee.primSpecEdgeColor      (number) ...
+        ...
 
-                                                       user_parameter = NodegraphAPI.GetNode("RenderAOVs").getParameter("user.Extra")
-                                                       new_parameter = user_parameter.createChildStringArray("AOV1", 2)
+        user.Extra. ...                 (string array) optionally generated parameter with python script (button):
 
-                                                       new_parameter.getChildByIndex(0).setValue("aovName", 0)
-                                                       new_parameter.getChildByIndex(1).setValue("varying color (float, vector, normal)", 0)
+                                                           user_parameter = NodegraphAPI.GetNode("RenderAOVs").getParameter("user.Extra")
+                                                           new_parameter = user_parameter.createChildStringArray("AOV1", 2)
+
+                                                           new_parameter.getChildByIndex(0).setValue("aovName", 0)
+                                                           new_parameter.getChildByIndex(1).setValue("varying color (float, vector, normal)", 0)
 
 
-    user.FilenameTag                (string) string that will be added to name of output files
+        user.FilenameTag                (string) string that will be added to name of output file
 
-    user.CreateStatisticFile        (number) switch to create statistic file
+        user.CreateStatisticFile        (number) switch to create statistic file
 
 ]]
 
@@ -70,51 +40,13 @@ Required user defined parameters:
 
 
 -- get switches to include channel to multi-channeled exr files
-local CheckBox_holdouts          = Attribute.GetFloatValue(Interface.GetOpArg("user.Holdout.ouputAOVs"), 0.0)
-
-local CheckBox_Ci                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Ci"), 0.0)
-local CheckBox_a                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.a"), 0.0)
-local CheckBox_time              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.time"), 0.0)
-local CheckBox_Oi                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Oi"), 0.0)
-local CheckBox_id                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.id"), 0.0)
-local CheckBox_rawId             = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.rawId"), 0.0)
-local CheckBox_cpuTime           = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.cpuTime"), 0.0)
-local CheckBox_sampleCount       = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.sampleCount"), 0.0)
-local CheckBox_curvature         = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.curvature"), 0.0)
-local CheckBox_mpSize            = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.mpSize"), 0.0)
-local CheckBox_biasR             = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.biasR"), 0.0)
-local CheckBox_biasT             = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.biasT"), 0.0)
-local CheckBox_incidentRayRadius = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.incidentRayRadius"), 0.0)
-local CheckBox_incidentRaySpread = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.incidentRaySpread"), 0.0)
-local CheckBox_P                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.P"), 0.0)
-local CheckBox_Po                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Po"), 0.0)
-local CheckBox_dPdu              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dPdu"), 0.0)
-local CheckBox_dPdv              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dPdv"), 0.0)
-local CheckBox_dPdw              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dPdw"), 0.0)
-local CheckBox_PRadius           = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.PRadius"), 0.0)
-local CheckBox_du                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.du"), 0.0)
-local CheckBox_dv                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dv"), 0.0)
-local CheckBox_dw                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dw"), 0.0)
-local CheckBox_u                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.u"), 0.0)
-local CheckBox_v                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.v"), 0.0)
-local CheckBox_w                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.w"), 0.0)
-local CheckBox_Ngn               = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Ngn"), 0.0)
-local CheckBox_Nn                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Nn"), 0.0)
-local CheckBox_dPdtime           = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.dPdtime"), 0.0)
-local CheckBox_Non               = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Non"), 0.0)
-local CheckBox_motionBack        = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.motionBack"), 0.0)
-local CheckBox_motionFore        = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.motionFore"), 0.0)
-local CheckBox_Tn                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Tn"), 0.0)
-local CheckBox_Vn                = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.Vn"), 0.0)
-local CheckBox_VLen              = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.VLen"), 0.0)
-local CheckBox_z                 = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.z"), 0.0)
-local CheckBox_outsideIOR        = Attribute.GetFloatValue(Interface.GetOpArg("user.BuiltIn.outsideIOR"), 0.0)
+local CheckBox_holdouts      = Attribute.GetFloatValue(Interface.GetOpArg("user.Holdout.outputAOVs"), 0.0)
 
 -- get switch from user defined parameter to create statistic file
-local CheckBox_StatisticFile     = Attribute.GetFloatValue(Interface.GetOpArg("user.CreateStatisticFile"), 0)
+local CheckBox_StatisticFile = Attribute.GetFloatValue(Interface.GetOpArg("user.CreateStatisticFile"), 0)
 
 -- get string value to add to output files
-local FilenameTag               = Attribute.GetStringValue(Interface.GetOpArg("user.FilenameTag"), "")
+local FilenameTag  = Attribute.GetStringValue(Interface.GetOpArg("user.FilenameTag"), "")
 if    FilenameTag ~= "" then FilenameTag = "_" .. FilenameTag end
 
 
@@ -124,15 +56,17 @@ local channel_list = ""
 
 
 
+
+
 function PrmanOutputChannelDefine (input_name, input_type, input_lpe)
 
     --[[
-    Works the same way as the PrmanOutputChannelDefine node plus collect defined channels
+        Works the same way as the PrmanOutputChannelDefine node plus collect defined channels
 
-    Arguments:
-        input_name  (string): name of outputChannel
-        input_type  (string): type of channel data
-        input_lpe   (string): Light Path Expression ("color lpe:C.*[<L.>O]")
+        Arguments:
+            input_name  (string): name of outputChannel
+            input_type  (string): type of channel data
+            input_lpe   (string): Light Path Expression ("color lpe:C.*[<L.>O]")
     ]]
 
 
@@ -165,49 +99,146 @@ end
 
 
 
+
+function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
+
+    --[[
+        Looks for selected checkboxes
+        in input group attribute (recursively)
+        and creates outputChannels
+
+        Arguments:
+            groupAttr (class GroupAttribute): user defined group with any hierarchy
+            outputTable               (table): list of parameters for outputChannels
+                                               {{name, type, lpe}, {...}}
+            forceRed                   (bool): to move float outputChannel to "red" channel forcibly
+            teeTag                     (bool): to add "tee_" prefix to outputChannel name
+    ]]
+
+
+    -- set default argument values
+    forceRed = forceRed or false
+    teeTag   = teeTag   or false
+
+
+    -- in all items in input group
+    for indexChild=1, groupAttr:getNumberOfChildren() do
+        local item = groupAttr:getChildByIndex(indexChild-1)
+
+        -- find group attributes and dive inside
+        if Attribute.IsGroup(item) then
+            CheckboxSearcher(item, outputTable, forceRed, teeTag) end
+
+        -- find selected checkboxes
+        if Attribute.IsFloat(item) then
+        if Attribute.GetFloatValue(item, 0.0) > 0.0 then
+
+            -- compare attribute name with outputChannel names
+            local itemName  = groupAttr:getChildName(indexChild-1)
+            for indexOutput=1, #outputTable do
+            if itemName == outputTable[indexOutput][1] then
+
+                -- get parameters and create outputChannel
+                local outputName = outputTable[indexOutput][1]
+                local outputType = outputTable[indexOutput][2]
+                local outputLpe  = outputTable[indexOutput][3]
+
+                if forceRed and outputType == "varying float" then
+                    outputName = outputName .. ".r" end
+
+                if teeTag then outputName  = "tee_" .. outputName end
+
+
+                PrmanOutputChannelDefine(outputName, outputType, outputLpe)
+
+            end
+            end
+
+        end
+        end
+
+    end
+end
+
+
+
+
+
 -- add built-in AOV channels to include to multi-channeled exr files
-if CheckBox_Ci > 0.0 then                PrmanOutputChannelDefine("Ci",                "varying color")  end
-if CheckBox_a > 0.0 then                 PrmanOutputChannelDefine("a",                 "varying float")  end
-if CheckBox_time > 0.0 then              PrmanOutputChannelDefine("time",              "varying float")  end
-if CheckBox_Oi > 0.0 then                PrmanOutputChannelDefine("Oi",                "varying color")  end
-if CheckBox_id > 0.0 then                PrmanOutputChannelDefine("id",                "varying float")  end
-if CheckBox_rawId > 0.0 then             PrmanOutputChannelDefine("rawId",             "varying float")  end
-if CheckBox_cpuTime > 0.0 then           PrmanOutputChannelDefine("cpuTime",           "varying float")  end
-if CheckBox_sampleCount > 0.0 then       PrmanOutputChannelDefine("sampleCount",       "varying float")  end
-if CheckBox_curvature > 0.0 then         PrmanOutputChannelDefine("curvature",         "varying float")  end
-if CheckBox_mpSize > 0.0 then            PrmanOutputChannelDefine("mpSize",            "varying float")  end
-if CheckBox_biasR > 0.0 then             PrmanOutputChannelDefine("biasR",             "varying float")  end
-if CheckBox_biasT > 0.0 then             PrmanOutputChannelDefine("biasT",             "varying float")  end
-if CheckBox_incidentRayRadius > 0.0 then PrmanOutputChannelDefine("incidentRayRadius", "varying float")  end
-if CheckBox_incidentRaySpread > 0.0 then PrmanOutputChannelDefine("incidentRaySpread", "varying float")  end
-if CheckBox_P > 0.0 then                 PrmanOutputChannelDefine("P",                 "varying vector") end
-if CheckBox_Po > 0.0 then                PrmanOutputChannelDefine("Po",                "varying vector") end
-if CheckBox_dPdu > 0.0 then              PrmanOutputChannelDefine("dPdu",              "varying vector") end
-if CheckBox_dPdv > 0.0 then              PrmanOutputChannelDefine("dPdv",              "varying vector") end
-if CheckBox_dPdw > 0.0 then              PrmanOutputChannelDefine("dPdw",              "varying vector") end
-if CheckBox_PRadius > 0.0 then           PrmanOutputChannelDefine("PRadius",           "varying float")  end
-if CheckBox_du > 0.0 then                PrmanOutputChannelDefine("du",                "varying float")  end
-if CheckBox_dv > 0.0 then                PrmanOutputChannelDefine("dv",                "varying float")  end
-if CheckBox_dw > 0.0 then                PrmanOutputChannelDefine("dw",                "varying float")  end
-if CheckBox_u > 0.0 then                 PrmanOutputChannelDefine("u",                 "varying float")  end
-if CheckBox_v > 0.0 then                 PrmanOutputChannelDefine("v",                 "varying float")  end
-if CheckBox_w > 0.0 then                 PrmanOutputChannelDefine("w",                 "varying float")  end
-if CheckBox_Ngn > 0.0 then               PrmanOutputChannelDefine("Ngn",               "varying normal") end
-if CheckBox_Nn > 0.0 then                PrmanOutputChannelDefine("Nn",                "varying normal") end
-if CheckBox_dPdtime > 0.0 then           PrmanOutputChannelDefine("dPdtime",           "varying vector") end
-if CheckBox_Non > 0.0 then               PrmanOutputChannelDefine("Non",               "varying normal") end
-if CheckBox_motionBack > 0.0 then        PrmanOutputChannelDefine("motionBack",        "varying vector") end
-if CheckBox_motionFore > 0.0 then        PrmanOutputChannelDefine("motionFore",        "varying vector") end
-if CheckBox_Tn > 0.0 then                PrmanOutputChannelDefine("Tn",                "varying vector") end
-if CheckBox_Vn > 0.0 then                PrmanOutputChannelDefine("Vn",                "varying vector") end
-if CheckBox_VLen > 0.0 then              PrmanOutputChannelDefine("VLen",              "varying float")  end
-if CheckBox_z > 0.0 then                 PrmanOutputChannelDefine("z",                 "varying float")  end
-if CheckBox_outsideIOR > 0.0 then        PrmanOutputChannelDefine("outsideIOR",        "varying float")  end
+local builtInChannels = {
+    {"Ci",                "varying color",  ""},
+    {"a",                 "varying float",  ""},
+    {"time",              "varying float",  ""},
+    {"Oi",                "varying color",  ""},
+    {"id",                "varying float",  ""},
+    {"rawId",             "varying float",  ""},
+    {"cpuTime",           "varying float",  ""},
+    {"sampleCount",       "varying float",  ""},
+    {"curvature",         "varying float",  ""},
+    {"mpSize",            "varying float",  ""},
+    {"biasR",             "varying float",  ""},
+    {"biasT",             "varying float",  ""},
+    {"incidentRayRadius", "varying float",  ""},
+    {"incidentRaySpread", "varying float",  ""},
+    {"P",                 "varying vector", ""},
+    {"Po",                "varying vector", ""},
+    {"dPdu",              "varying vector", ""},
+    {"dPdv",              "varying vector", ""},
+    {"dPdw",              "varying vector", ""},
+    {"PRadius",           "varying float",  ""},
+    {"du",                "varying float",  ""},
+    {"dv",                "varying float",  ""},
+    {"dw",                "varying float",  ""},
+    {"u",                 "varying float",  ""},
+    {"v",                 "varying float",  ""},
+    {"w",                 "varying float",  ""},
+    {"Ngn",               "varying normal", ""},
+    {"Nn",                "varying normal", ""},
+    {"dPdtime",           "varying vector", ""},
+    {"Non",               "varying normal", ""},
+    {"motionBack",        "varying vector", ""},
+    {"motionFore",        "varying vector", ""},
+    {"Tn",                "varying vector", ""},
+    {"Vn",                "varying vector", ""},
+    {"VLen",              "varying float",  ""},
+    {"z",                 "varying float",  ""},
+    {"outsideIOR",        "varying float",  ""}}
+
+CheckboxSearcher(Interface.GetOpArg("user.BuiltIn"), builtInChannels)
+
 
 
 -- add holdout channels to include to multi-channeled exr files
-if CheckBox_holdouts > 0.0 then          PrmanOutputChannelDefine("occluded",          "varying color", "color lpe:holdouts;C[DS]+<L.>")
-                                         PrmanOutputChannelDefine("shadow",            "varying color", "color lpe:holdouts;unoccluded;C[DS]+<L.>") end
+if CheckBox_holdouts > 0.0 then PrmanOutputChannelDefine("occluded", "varying color", "color lpe:holdouts;C[DS]+<L.>")
+                                PrmanOutputChannelDefine("shadow",   "varying color", "color lpe:holdouts;unoccluded;C[DS]+<L.>") end
+
+
+
+-- add "tee" AOV channels to include to multi-channeled exr files
+local teeChannels = {
+    {"diffuseColor",          "varying color"},
+    {"primSpecEdgeColor",     "varying color"},
+    {"primSpecRoughness",     "varying float"},
+    {"roughSpecEdgeColor",    "varying color"},
+    {"roughSpecRoughness",    "varying float"},
+    {"clearcoatEdgeColor",    "varying color"},
+    {"clearcoatRoughness",    "varying float"},
+    {"subsurfaceColor",       "varying color"},
+    {"subsurfaceDmfpColor",   "varying color"},
+    {"singlescatterColor",    "varying color"},
+    {"singlescatterMfpColor", "varying color"},
+    {"glassRefractionColor",  "varying color"},
+    {"glassRoughness",        "varying float"},
+    {"glowColor",             "varying color"},
+    {"bump",                  "varying float"},
+    {"presence",              "varying float"},
+    {"displacementScalar",    "varying float"},
+    {"displacementVector",    "varying color"},
+    {"mask",                  "varying float"}}
+
+CheckboxSearcher(Interface.GetOpArg("user.Tee"), teeChannels, true, true)
+
+
 
 
 
@@ -215,21 +246,20 @@ if CheckBox_holdouts > 0.0 then          PrmanOutputChannelDefine("occluded",   
 local extraAOVs = Interface.GetOpArg("user.Extra")
 local extraDefaults = {"aovName", "varying color (float, vector, normal)"}
 
-for i=2, extraAOVs:getNumberOfChildren() do
-    local extraAOV_Item = extraAOVs:getChildByIndex(i-1):getNearestSample(0)
+for indexChild=2, extraAOVs:getNumberOfChildren() do
+    local extraAOV_Item = extraAOVs:getChildByIndex(indexChild-1):getNearestSample(0)
 
-    local channel_name = extraAOV_Item[1]
-    local channel_type = extraAOV_Item[2]
-    local cahennl_lpe  = "" .. channel_name .. ""
+    local extraName = extraAOV_Item[1]
+    local extraType = extraAOV_Item[2]
+    local extraLpe  = "" .. extraName .. ""
 
-    if channel_type == "varying float" then
-        channel_name = channel_name .. ".r"
-    end
+    if extraType == "varying float" then
+        extraName = extraName .. ".r" end
 
-    if channel_name ~= extraDefaults[1] and channel_type ~= extraDefaults[2] then
-        if channel_name ~= "" and channel_type ~= "" then
+    if extraName ~= extraDefaults[1] and extraType ~= extraDefaults[2] then
+        if extraName ~= "" and extraType ~= "" then
 
-            PrmanOutputChannelDefine(channel_name, channel_type, cahennl_lpe)
+            PrmanOutputChannelDefine(extraName, extraType, extraLpe)
 
         end
     end
