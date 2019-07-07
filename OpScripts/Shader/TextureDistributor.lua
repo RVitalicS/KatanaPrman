@@ -45,14 +45,9 @@ function RandomChoice ( input_table, input_seed )
 
 
     -- get current node name and create random seed
-    local input_name = pystring.os.path.basename(Interface.GetInputLocationPath())
-    local local_seed = 0
-
-    for i in string.gmatch(input_name, ".") do
-        math.randomseed(string.byte(i))
-        local_seed = math.random(9) + local_seed
-        math.randomseed(local_seed + input_seed)
-    end
+    local inputLocationPath = Interface.GetInputLocationPath()
+    local local_seed = ExpressionMath.stablehash(inputLocationPath)
+    math.randomseed(local_seed + input_seed)
 
 
     -- return random item from input table
@@ -153,8 +148,7 @@ function DistributeTexture ( input_attribute, input_texture, input_seed )
 
 
             -- create string with specific file path and set attribute
-            local path_head, sequence, path_tail = string.match(input_texture, "(.+)(<.+>)(.+)")
-            local textureFormat = path_head .. string.format("%%0%sd", sequenceLength) .. path_tail
+            local textureFormat = string.gsub(input_texture, "(<.*>)", string.format("%%%%0%sd", sequenceLength))
 
             local textureString = string.format(textureFormat, RandomChoice(possibleNumbers, input_seed))
                   textureString = pystring.replace(textureString, "\\", "/")

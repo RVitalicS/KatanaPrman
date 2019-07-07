@@ -490,16 +490,11 @@ function RandomChoice ( input_table, input_seed )
 
 
     -- get current node name and create random seed
-    local input_name = pystring.os.path.basename(Interface.GetInputLocationPath())
-    local local_seed = 0
+    local inputLocationPath = Interface.GetInputLocationPath()
+    local local_seed = ExpressionMath.stablehash(inputLocationPath)
+    math.randomseed(local_seed + input_seed)
 
-    for i in string.gmatch(input_name, ".") do
-        math.randomseed(string.byte(i))
-        local_seed = math.random(9) + local_seed
-        math.randomseed(local_seed + input_seed)
-    end
-  
-  
+
     -- return random item from input table
     if #input_table > 0 then
         return input_table[math.random(#input_table)] else
@@ -515,7 +510,7 @@ function DistributeTexture ( input_attribute, input_texture, input_seed )
 
     --[[
         Adds "textures.xxx" attribute with texture distribution option
-        
+
         Arguments:
             input_attribute  (string): attribute name that will be used in shader parameter
             input_texture    (string): path to texture with or without expression
@@ -546,7 +541,7 @@ function DistributeTexture ( input_attribute, input_texture, input_seed )
             for pairString in string.gmatch(sequenceExpression, '([^,]+)') do
                 pairStrings[#pairStrings+1] = pairString
             end
-            
+
 
             -- expand number pairs to sequence of numbers
             -- and create list of all possible numbers
@@ -595,11 +590,10 @@ function DistributeTexture ( input_attribute, input_texture, input_seed )
                 end
 
             end
-            
+
 
             -- create string with specific file path and set attribute
-            local path_head, sequence, path_tail = string.match(input_texture, "(.+)(<.+>)(.+)")
-            local textureFormat = path_head .. string.format("%%0%sd", sequenceLength) .. path_tail
+            local textureFormat = string.gsub(input_texture, "(<.*>)", string.format("%%%%0%sd", sequenceLength))
 
             local textureString = string.format(textureFormat, RandomChoice(possibleNumbers, input_seed))
                   textureString = pystring.replace(textureString, "\\", "/")
