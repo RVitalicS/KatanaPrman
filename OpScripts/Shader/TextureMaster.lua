@@ -50,6 +50,7 @@ local shader_parameters = {
     "glowColor",
     "bump",
     "normal",
+    "flakeRandomness",
     "presence",
     "displacementScalar",
     "displacementVector",
