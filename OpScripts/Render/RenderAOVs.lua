@@ -143,10 +143,12 @@ function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
                 local outputType = outputTable[indexOutput][2]
                 local outputLpe  = outputTable[indexOutput][3]
 
+                if teeTag then
+                    outputName  = "tee_" .. outputName
+                    outputLpe   = "" .. outputName .. "" end
+
                 if forceRed and outputType == "varying float" then
                     outputName = outputName .. ".r" end
-
-                if teeTag then outputName  = "tee_" .. outputName end
 
 
                 PrmanOutputChannelDefine(outputName, outputType, outputLpe)
@@ -216,25 +218,25 @@ if CheckBox_holdouts > 0.0 then PrmanOutputChannelDefine("occluded", "varying co
 
 -- add "tee" AOV channels to include to multi-channeled exr files
 local teeChannels = {
-    {"diffuseColor",          "varying color"},
-    {"primSpecEdgeColor",     "varying color"},
-    {"primSpecRoughness",     "varying float"},
-    {"roughSpecEdgeColor",    "varying color"},
-    {"roughSpecRoughness",    "varying float"},
-    {"clearcoatEdgeColor",    "varying color"},
-    {"clearcoatRoughness",    "varying float"},
-    {"subsurfaceColor",       "varying color"},
-    {"subsurfaceDmfpColor",   "varying color"},
-    {"singlescatterColor",    "varying color"},
-    {"singlescatterMfpColor", "varying color"},
-    {"glassRefractionColor",  "varying color"},
-    {"glassRoughness",        "varying float"},
-    {"glowColor",             "varying color"},
-    {"bump",                  "varying float"},
-    {"presence",              "varying float"},
-    {"displacementScalar",    "varying float"},
-    {"displacementVector",    "varying color"},
-    {"mask",                  "varying float"}}
+    {"diffuseColor",          "varying color", ""},
+    {"primSpecEdgeColor",     "varying color", ""},
+    {"primSpecRoughness",     "varying float", ""},
+    {"roughSpecEdgeColor",    "varying color", ""},
+    {"roughSpecRoughness",    "varying float", ""},
+    {"clearcoatEdgeColor",    "varying color", ""},
+    {"clearcoatRoughness",    "varying float", ""},
+    {"subsurfaceColor",       "varying color", ""},
+    {"subsurfaceDmfpColor",   "varying color", ""},
+    {"singlescatterColor",    "varying color", ""},
+    {"singlescatterMfpColor", "varying color", ""},
+    {"glassRefractionColor",  "varying color", ""},
+    {"glassRoughness",        "varying float", ""},
+    {"glowColor",             "varying color", ""},
+    {"bump",                  "varying float", ""},
+    {"presence",              "varying float", ""},
+    {"displacementScalar",    "varying float", ""},
+    {"displacementVector",    "varying color", ""},
+    {"mask",                  "varying float", ""}}
 
 CheckboxSearcher(Interface.GetOpArg("user.Tee"), teeChannels, true, true)
 
