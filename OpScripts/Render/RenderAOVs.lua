@@ -38,6 +38,8 @@
 
 
 
+-- define output name
+local outputName = "aovs"
 
 -- get switches to include channel to multi-channeled exr files
 local CheckBox_holdouts      = Attribute.GetFloatValue(Interface.GetOpArg("user.Holdout.outputAOVs"), 0.0)
@@ -47,7 +49,9 @@ local CheckBox_StatisticFile = Attribute.GetFloatValue(Interface.GetOpArg("user.
 
 -- get string value to add to output files
 local FilenameTag  = Attribute.GetStringValue(Interface.GetOpArg("user.FilenameTag"), "")
-if    FilenameTag ~= "" then FilenameTag = "_" .. FilenameTag end
+if FilenameTag ~= "" then
+    outputName  = ""  .. FilenameTag .. ""
+    FilenameTag = "_" .. FilenameTag end
 
 
 -- variable that collect all defined here AOV channels as a string
@@ -100,7 +104,7 @@ end
 
 
 
-function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
+function CheckboxSearcher(groupAttr, channelTable, forceRed, teeTag)
 
     --[[
         Looks for selected checkboxes
@@ -108,8 +112,8 @@ function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
         and creates outputChannels
 
         Arguments:
-            groupAttr (class GroupAttribute): user defined group with any hierarchy
-            outputTable               (table): list of parameters for outputChannels
+            groupAttr  (class GroupAttribute): user defined group with any hierarchy
+            channelTable              (table): list of parameters for outputChannels
                                                {{name, type, lpe}, {...}}
             forceRed                   (bool): to move float outputChannel to "red" channel forcibly
             teeTag                     (bool): to add "tee_" prefix to outputChannel name
@@ -127,7 +131,7 @@ function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
 
         -- find group attributes and dive inside
         if Attribute.IsGroup(item) then
-            CheckboxSearcher(item, outputTable, forceRed, teeTag) end
+            CheckboxSearcher(item, channelTable, forceRed, teeTag) end
 
         -- find selected checkboxes
         if Attribute.IsFloat(item) then
@@ -135,23 +139,23 @@ function CheckboxSearcher(groupAttr, outputTable, forceRed, teeTag)
 
             -- compare attribute name with outputChannel names
             local itemName  = groupAttr:getChildName(indexChild-1)
-            for indexOutput=1, #outputTable do
-            if itemName == outputTable[indexOutput][1] then
+            for indexOutput=1, #channelTable do
+            if itemName == channelTable[indexOutput][1] then
 
                 -- get parameters and create outputChannel
-                local outputName = outputTable[indexOutput][1]
-                local outputType = outputTable[indexOutput][2]
-                local outputLpe  = outputTable[indexOutput][3]
+                local channelName = channelTable[indexOutput][1]
+                local channelType = channelTable[indexOutput][2]
+                local channelLpe  = channelTable[indexOutput][3]
 
                 if teeTag then
-                    outputName  = "tee_" .. outputName
-                    outputLpe   = "" .. outputName .. "" end
+                    channelName  = "tee_" .. channelName
+                    channelLpe   = "" .. channelName .. "" end
 
-                if forceRed and outputType == "varying float" then
-                    outputName = outputName .. ".r" end
+                if forceRed and channelType == "varying float" then
+                    channelName = channelName .. ".r" end
 
 
-                PrmanOutputChannelDefine(outputName, outputType, outputLpe)
+                PrmanOutputChannelDefine(channelName, channelType, channelLpe)
 
             end
             end
@@ -285,10 +289,10 @@ local output_path = pystring.os.path.join(shot_path, string.format("%s%s.exr", s
 -- Create one render output for chosen AOV outputChannels
 if channel_list ~= "" then
 
-    Interface.SetAttr('renderSettings.outputs.aovs.type', StringAttribute("raw"))
-    Interface.SetAttr('renderSettings.outputs.aovs.rendererSettings.channel', StringAttribute(channel_list))
-    Interface.SetAttr('renderSettings.outputs.aovs.locationType', StringAttribute("file"))
-    Interface.SetAttr('renderSettings.outputs.aovs.locationSettings.renderLocation', StringAttribute(output_path))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.type", outputName), StringAttribute("raw"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.rendererSettings.channel", outputName), StringAttribute(channel_list))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationType", outputName), StringAttribute("file"))
+    Interface.SetAttr(string.format("renderSettings.outputs.%s.locationSettings.renderLocation", outputName), StringAttribute(output_path))
 
 
         -- create statistic file at will
