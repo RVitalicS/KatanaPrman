@@ -1,30 +1,49 @@
-"""
-Add prman render button at the top of the interface
 
-"""
 
 from Katana import Callbacks
+from Katana import QtWidgets
+
 import os
 import sys
 
 
-# add paths from katana resources to access importing modules from there
-for i in os.getenv('KATANA_RESOURCES').split(';'):
-	if os.path.exists(i):
-		if i not in sys.path:
-			sys.path.append(i)
+
+resources_path = os.getenv('PRMAN_RESOURCES')
+if os.path.exists(resources_path):
+    if resources_path not in sys.path:
+        sys.path.append(resources_path)
 
 
-# create callback
+
+
+
 def onStartupComplete(objectHash):
 
-	# try if Katana launched in interactive (GUI) mode
-	try:
-		from Startup import prmanRunButton
-	except:
-		pass
+    from Startup import prmanRunButton
+        
+    from Scripts import scenegraph
+    tree = scenegraph.get_tree()
+    if tree:
+        tree.setLocationExpandedRecursive('/root', '/root')
 
 
-# register callback
-Callbacks.addCallback(Callbacks.Type.onStartupComplete, onStartupComplete)
 
+
+def onSceneLoad(objectHash, filename):
+
+    if filename:
+        from Scripts import backup
+        backup.make(filename)
+        
+        from Scripts import onload
+        reload(onload)
+        onload.main()
+
+
+
+
+
+if QtWidgets.qApp.applicationState() == 4:
+
+    Callbacks.addCallback(Callbacks.Type.onStartupComplete, onStartupComplete)
+    Callbacks.addCallback(Callbacks.Type.onSceneLoad, onSceneLoad)

@@ -63,7 +63,7 @@ def ActionCallback(value):
 layeredMenu = LayeredMenuAPI.LayeredMenu(
 	PopulateCallback,
 	ActionCallback,
-	'S',
+	'P',
 	alwaysPopulate=False,
 	onlyMatchWordStart=False
 	)
