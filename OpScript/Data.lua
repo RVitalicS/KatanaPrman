@@ -28,4 +28,46 @@ end
 
 
 
+function Data.MergeTables ( receiverTable, senderTable )
+
+   for key, value in pairs(senderTable) do
+
+      table.insert(receiverTable, value)
+      
+   end 
+ 
+   return receiverTable
+end
+
+
+
+
+
+function Data.RemoveDoubles ( inputTable )
+
+    local sortedItems = {}
+    local hash = {}
+
+
+    for index=1, #inputTable do
+
+        local item = inputTable[index]
+
+        if not hash[item] then
+
+            table.insert(sortedItems, item)
+            hash[item] = true
+
+        end
+    end
+
+
+    return sortedItems
+
+end
+
+
+
+
+
 return Data

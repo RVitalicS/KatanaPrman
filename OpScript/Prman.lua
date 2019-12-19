@@ -4,11 +4,17 @@ local Prman = {}
 
 
 
+package.loaded.Data = nil
+local Data = require 'Data'
+
+
+
 
 
 function Prman.OutputChannelDefine (inputName, inputType, inputLpe, inputStatistics)
 
    --[[
+   
        Works the same way as the PrmanOutputChannelDefine node plus collect defined channels
 
        Arguments:
@@ -24,34 +30,119 @@ function Prman.OutputChannelDefine (inputName, inputType, inputLpe, inputStatist
    inputStatistics = inputStatistics or ''
 
 
-    local outputName = "" .. inputName .. ""
-          outputName = outputName:gsub("%.", "_")
+    local outputName = '' .. inputName .. ''
+          outputName = outputName:gsub('%.', '_')
 
 
     -- create outputChannel
-    if inputName ~= 'beauty' then
-        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.type', outputName), StringAttribute(inputType))
-        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.name', outputName), StringAttribute(inputName))
+    Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.type', outputName), StringAttribute(inputType))
+    Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.name', outputName), StringAttribute(inputName))
 
-        if inputLpe ~= '' then
-            Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.type', outputName), StringAttribute('string'))
-            Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.value', outputName), StringAttribute(inputLpe))
+
+    if inputLpe ~= '' then
+        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.type', outputName), StringAttribute('string'))
+        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.source.value', outputName), StringAttribute(inputLpe))
+    end
+
+
+    if inputStatistics ~= '' then
+        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.type', outputName), StringAttribute('string'))
+        Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.value', outputName), StringAttribute(inputStatistics))
+    end
+
+end
+
+
+
+
+
+function Prman.GetLightGroups ()
+
+    -- define LightGroup collector
+    local lightGroups = {}
+
+
+    -- for each light
+    local lightList = Interface.GetGlobalAttr('lightList', '/root/world')
+    for lightIndex=1, lightList:getNumberOfChildren() do
+
+        -- get SceneGraph path
+        local lightAttributes = lightList:getChildByIndex( lightIndex-1 )
+        local SceneGraph_path = lightAttributes:getChildByName('path')
+        SceneGraph_path  = Attribute.GetStringValue(SceneGraph_path, '')
+
+
+        -- get LightGroup
+        local lightGroup = Interface.GetGlobalAttr('material.prmanLightParams.lightGroup', SceneGraph_path)
+
+        if lightGroup ~= nil then
+            lightGroup = Attribute.GetStringValue(lightGroup, '')
+        else
+            lightGroup = 'default'
         end
 
-       if inputStatistics ~= '' then
-           Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.type', outputName), StringAttribute('string'))
-           Interface.SetAttr(string.format('prmanGlobalStatements.outputChannels.%s.params.statistics.value', outputName), StringAttribute(inputStatistics))
-       end
 
-    else
-        Interface.SetAttr('prmanGlobalStatements.outputChannels.Ci.type', StringAttribute('color'))
-        Interface.SetAttr('prmanGlobalStatements.outputChannels.Ci.name', StringAttribute('Ci'))
+        -- check if light is on
+        local mute = Interface.GetAttr('info.light.mute', SceneGraph_path)
 
-        Interface.SetAttr('prmanGlobalStatements.outputChannels.a.type', StringAttribute('float'))
-        Interface.SetAttr('prmanGlobalStatements.outputChannels.a.name', StringAttribute('a'))
-        
+        if mute then
+            if Interface.GetAttr('info.light.mute', SceneGraph_path):getValue() == 1 then
+                mute = true
+            else
+                mute = false
+            end
+        else
+            mute = false
+        end
+
+
+        -- add LightGroup to collector
+        if not mute then
+            table.insert(lightGroups, lightGroup)
+        end
+
     end
+
+
+    return Data.RemoveDoubles(lightGroups)
+
 end
+
+
+
+
+
+function Prman.LpeGroupConvert ( inputTable )
+
+    local outputTable = {}
+
+
+    local reverseString = "^"
+    local hasDefault = false
+
+    for index=1, #inputTable do
+
+        local groupName = inputTable[index]
+        if groupName ~= 'default' then
+
+            outputTable[groupName] = string.format("['%s']", groupName)
+            reverseString = reverseString .. string.format("'%s'", groupName)
+
+        else
+            hasDefault = true
+
+        end
+    end
+
+
+    if hasDefault then
+        outputTable['default'] = string.format("[%s]", reverseString)
+    end
+
+
+    return outputTable
+end
+
 
 
 

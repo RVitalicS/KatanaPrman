@@ -4,8 +4,6 @@ local Channels = {}
 
 
 
-
-
 package.loaded.UserGroup = nil
 package.loaded.Prman     = nil
 package.loaded.Data      = nil
@@ -35,8 +33,21 @@ function Channels.Checkboxed ( inputGroup, channelTable, forceRed, teeTag )
         local channelStat = channelTable[indexChannel][4]
 
 
+
+        local checked = false
+
         if Channels.CheckboxMatch( inputGroup, channelName:gsub('^__', '') ) then
 
+            checked = true end
+
+        if channelName == 'Ci' or channelName == 'a' then
+        if Channels.CheckboxMatch( inputGroup, 'beauty' ) then
+
+                    checked = true end end
+
+
+
+        if checked then
 
             if teeTag then
                 channelName  = 'tee_' .. channelName
@@ -48,8 +59,6 @@ function Channels.Checkboxed ( inputGroup, channelTable, forceRed, teeTag )
 
             Prman.OutputChannelDefine(channelName, channelType, channelLpe, channelStat)
 
-
-            if channelName == 'beauty' then channelName =  'Ci,a' end
 
             if channelString == '' then
                 channelString = channelName
@@ -125,11 +134,14 @@ end
 
 
 
-function Channels.PrmanEssentials()
+function Channels.PrmanEssentials ( lpeGroup, lightGroup )
+
+    lpeGroup   = lpeGroup   or ''
+    lightGroup = lightGroup or ''
+
 
     local SearchGroup = Interface.GetOpArg('user')
     local EssentialChannels = {
-        { 'beauty'                         ,   'color',     ""                         ,    '' },
 
         { 'directDiffuse'                  ,   'color',     "color lpe:C<RD>[<L.>O]"   ,    '' },
         { 'indirectDiffuse'                ,   'color',     "color lpe:C<RD>.+[<L.>O]" ,    '' },
@@ -166,9 +178,20 @@ function Channels.PrmanEssentials()
         { '__WPref'                        ,   'color',     ""                         ,    '' },
         { '__WNref'                        ,   'color',     ""                         ,    '' }}
 
+    if Channels.CheckboxMatch( SearchGroup, 'beauty' ) then
+
+        local BeautyChannels = {
+        { 'Ci'                             ,   'color',     "color lpe:C.*[<L.>O]"     ,    '' },
+        { 'a'                              ,   'float',     ""                         ,    '' }}
+
+        EssentialChannels = Data.MergeTables( BeautyChannels, EssentialChannels )
+    end
+
 
     local channelString = Channels.Checkboxed(SearchGroup, EssentialChannels)
     LobePatrol(channelString)
+
+
 
     return channelString
 
@@ -180,7 +203,7 @@ end
 function Channels.PrmanDenoise()
 
     local DenoiseChannels = {
-        { 'Ci'            ,  'color'  ,   ""                                                                                           , ''         },
+        { 'Ci'            ,  'color'  ,   "color lpe:C.*[<L.>O]"                                                                       , ''         },
         { 'a'             ,  'float'  ,   ""                                                                                           , ''         },
         { 'mse'           ,  'color'  ,   "Ci"                                                                                         , 'mse'      },
 
@@ -234,90 +257,90 @@ function Channels.BuiltInAOVs()
 
     local SearchGroup = Interface.GetOpArg('user')
     local BuiltInAOVs = {
-        { 'Ci'               ,    'color' ,     ''                                        ,   '' },
-        { 'a'                ,    'float' ,     ''                                        ,   '' },
+        { 'Ci'               ,    'color' ,     "color lpe:C.*[<L.>O]"                    ,   '' },
+        { 'a'                ,    'float' ,     ""                                        ,   '' },
 
-        { 'dPdtime'          ,    'vector',     ''                                        ,   '' },
-        { 'motionBack'       ,    'vector',     ''                                        ,   '' },
-        { 'motionFore'       ,    'vector',     ''                                        ,   '' },
+        { 'dPdtime'          ,    'vector',     ""                                        ,   '' },
+        { 'motionBack'       ,    'vector',     ""                                        ,   '' },
+        { 'motionFore'       ,    'vector',     ""                                        ,   '' },
 
-        { 'Oi'               ,    'color' ,     ''                                        ,   '' },
-        { 'biasR'            ,    'float' ,     ''                                        ,   '' },
-        { 'biasT'            ,    'float' ,     ''                                        ,   '' },
-        { 'Tn'               ,    'vector',     ''                                        ,   '' },
-        { 'outsideIOR'       ,    'float' ,     ''                                        ,   '' },
+        { 'Oi'               ,    'color' ,     ""                                        ,   '' },
+        { 'biasR'            ,    'float' ,     ""                                        ,   '' },
+        { 'biasT'            ,    'float' ,     ""                                        ,   '' },
+        { 'Tn'               ,    'vector',     ""                                        ,   '' },
+        { 'outsideIOR'       ,    'float' ,     ""                                        ,   '' },
 
-        { 'dPdu'             ,    'vector',     ''                                        ,   '' },
-        { 'dPdv'             ,    'vector',     ''                                        ,   '' },
-        { 'dPdw'             ,    'vector',     ''                                        ,   '' },
-        { 'du'               ,    'float' ,     ''                                        ,   '' },
-        { 'dv'               ,    'float' ,     ''                                        ,   '' },
-        { 'dw'               ,    'float' ,     ''                                        ,   '' },
-        { 'u'                ,    'float' ,     ''                                        ,   '' },
-        { 'v'                ,    'float' ,     ''                                        ,   '' },
-        { 'w'                ,    'float' ,     ''                                        ,   '' },
+        { 'dPdu'             ,    'vector',     ""                                        ,   '' },
+        { 'dPdv'             ,    'vector',     ""                                        ,   '' },
+        { 'dPdw'             ,    'vector',     ""                                        ,   '' },
+        { 'du'               ,    'float' ,     ""                                        ,   '' },
+        { 'dv'               ,    'float' ,     ""                                        ,   '' },
+        { 'dw'               ,    'float' ,     ""                                        ,   '' },
+        { 'u'                ,    'float' ,     ""                                        ,   '' },
+        { 'v'                ,    'float' ,     ""                                        ,   '' },
+        { 'w'                ,    'float' ,     ""                                        ,   '' },
 
-        { 'curvature'        ,    'float' ,     ''                                        ,   '' },
-        { 'mpSize'           ,    'float' ,     ''                                        ,   '' },
-        { 'Ngn'              ,    'normal',     ''                                        ,   '' },
-        { 'Nn'               ,    'normal',     ''                                        ,   '' },
-        { 'Non'              ,    'normal',     ''                                        ,   '' },
+        { 'curvature'        ,    'float' ,     ""                                        ,   '' },
+        { 'mpSize'           ,    'float' ,     ""                                        ,   '' },
+        { 'Ngn'              ,    'normal',     ""                                        ,   '' },
+        { 'Nn'               ,    'normal',     ""                                        ,   '' },
+        { 'Non'              ,    'normal',     ""                                        ,   '' },
 
-        { 'P'                ,    'vector',     ''                                        ,   '' },
-        { 'Po'               ,    'vector',     ''                                        ,   '' },
+        { 'P'                ,    'vector',     ""                                        ,   '' },
+        { 'Po'               ,    'vector',     ""                                        ,   '' },
 
-        { 'time'             ,    'float' ,     ''                                        ,   '' },
-        { 'id'               ,    'float' ,     ''                                        ,   '' },
-        { 'rawId'            ,    'float' ,     ''                                        ,   '' },
-        { 'incidentRayRadius',    'float' ,     ''                                        ,   '' },
-        { 'incidentRaySpread',    'float' ,     ''                                        ,   '' },
-        { 'PRadius'          ,    'float' ,     ''                                        ,   '' },
-        { 'Vn'               ,    'vector',     ''                                        ,   '' },
-        { 'VLen'             ,    'float' ,     ''                                        ,   '' },
-        { 'z'                ,    'float' ,     ''                                        ,   '' },
+        { 'time'             ,    'float' ,     ""                                        ,   '' },
+        { 'id'               ,    'float' ,     ""                                        ,   '' },
+        { 'rawId'            ,    'float' ,     ""                                        ,   '' },
+        { 'incidentRayRadius',    'float' ,     ""                                        ,   '' },
+        { 'incidentRaySpread',    'float' ,     ""                                        ,   '' },
+        { 'PRadius'          ,    'float' ,     ""                                        ,   '' },
+        { 'Vn'               ,    'vector',     ""                                        ,   '' },
+        { 'VLen'             ,    'float' ,     ""                                        ,   '' },
+        { 'z'                ,    'float' ,     ""                                        ,   '' },
 
-        { 'cpuTime'          ,    'float' ,     ''                                        ,   '' },
-        { 'sampleCount'      ,    'float' ,     ''                                        ,   '' },
+        { 'cpuTime'          ,    'float' ,     ""                                        ,   '' },
+        { 'sampleCount'      ,    'float' ,     ""                                        ,   '' },
 
-        { 'occluded'         ,    'color' ,     'color lpe:holdouts;C[DS]+<L.>'           ,   '' },
-        { 'shadow'           ,    'color' ,     'color lpe:holdouts;unoccluded;C[DS]+<L.>',   '' }}
+        { 'occluded'         ,    'color' ,     "color lpe:holdouts;C[DS]+<L.>"           ,   '' },
+        { 'shadow'           ,    'color' ,     "color lpe:holdouts;unoccluded;C[DS]+<L.>",   '' }}
 
     local AOVString = Channels.Checkboxed(SearchGroup, BuiltInAOVs)
 
 
     local TeeGroup = Interface.GetOpArg('user.Tee')
     local TeeChannels = {
-        { 'diffuseColor'         ,     'color',     '',     '' },
+        { 'diffuseColor'         ,     'color',     "",     '' },
 
-        { 'primSpecEdgeColor'    ,     'color',     '',     '' },
-        { 'primSpecRoughness'    ,     'float',     '',     '' },
+        { 'primSpecEdgeColor'    ,     'color',     "",     '' },
+        { 'primSpecRoughness'    ,     'float',     "",     '' },
 
-        { 'roughSpecEdgeColor'   ,     'color',     '',     '' },
-        { 'roughSpecRoughness'   ,     'float',     '',     '' },
+        { 'roughSpecEdgeColor'   ,     'color',     "",     '' },
+        { 'roughSpecRoughness'   ,     'float',     "",     '' },
 
-        { 'clearcoatEdgeColor'   ,     'color',     '',     '' },
-        { 'clearcoatRoughness'   ,     'float',     '',     '' },
+        { 'clearcoatEdgeColor'   ,     'color',     "",     '' },
+        { 'clearcoatRoughness'   ,     'float',     "",     '' },
 
-        { 'subsurfaceColor'      ,     'color',     '',     '' },
-        { 'subsurfaceDmfpColor'  ,     'color',     '',     '' },
+        { 'subsurfaceColor'      ,     'color',     "",     '' },
+        { 'subsurfaceDmfpColor'  ,     'color',     "",     '' },
 
-        { 'singlescatterColor'   ,     'color',     '',     '' },
-        { 'singlescatterMfpColor',     'color',     '',     '' },
+        { 'singlescatterColor'   ,     'color',     "",     '' },
+        { 'singlescatterMfpColor',     'color',     "",     '' },
 
-        { 'glassRefractionColor' ,     'color',     '',     '' },
-        { 'glassRoughness'       ,     'float',     '',     '' },
+        { 'glassRefractionColor' ,     'color',     "",     '' },
+        { 'glassRoughness'       ,     'float',     "",     '' },
 
-        { 'glowColor'            ,     'color',     '',     '' },
+        { 'glowColor'            ,     'color',     "",     '' },
 
-        { 'normal'               ,     'color',     '',     '' },
-        { 'bump'                 ,     'float',     '',     '' },
+        { 'normal'               ,     'color',     "",     '' },
+        { 'bump'                 ,     'float',     "",     '' },
 
-        { 'presence'             ,     'float',     '',     '' },
+        { 'presence'             ,     'float',     "",     '' },
 
-        { 'displacementScalar'   ,     'float',     '',     '' },
-        { 'displacementVector'   ,     'color',     '',     '' },
+        { 'displacementScalar'   ,     'float',     "",     '' },
+        { 'displacementVector'   ,     'color',     "",     '' },
 
-        { 'mask'                 ,     'float',     '',     '' }}
+        { 'mask'                 ,     'float',     "",     '' }}
 
     local TeeString = Channels.Checkboxed(TeeGroup, TeeChannels, true, true)
 
