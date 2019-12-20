@@ -4,9 +4,11 @@ local Prman = {}
 
 
 
-package.loaded.Data = nil
-local Data = require 'Data'
+package.loaded.SceneGraph = nil
+package.loaded.Data       = nil
 
+local SceneGraph = require 'SceneGraph'
+local Data       = require 'Data'
 
 
 
@@ -55,6 +57,72 @@ end
 
 
 
+local function GetLpeGroupName ( inputLocation )
+
+    local groupName = ''
+
+
+    local attributePath = 'prmanStatements.attributes.identifier.lpegroup'
+    local lpeGroup = Interface.GetGlobalAttr(attributePath, inputLocation)
+
+    if lpeGroup then
+
+        groupName = Attribute.GetStringValue(lpeGroup, '')
+
+    end
+
+
+    return groupName
+end
+
+
+
+
+
+local function OnlyDefautCleaner (inputTable)
+
+    local outputTable = inputTable
+
+
+    if #inputTable == 1 then
+        if inputTable[1] == 'default' then
+
+            outputTable = {}
+        end
+    end
+
+
+    return outputTable
+end
+
+
+
+
+
+function Prman.GetLpeGroups ()
+
+    local lpeGroups = {}
+
+
+    local location = '/root/world/geo'
+
+    if Interface.GetGlobalAttr('type', location) then
+
+        lpeGroups = SceneGraph.Walker( GetLpeGroupName, location )
+        lpeGroups = Data.RemoveDoubles(lpeGroups)
+
+        table.insert(lpeGroups, 'default')
+    end
+
+
+    lpeGroups = OnlyDefautCleaner(lpeGroups)
+
+    return lpeGroups
+end
+
+
+
+
 
 function Prman.GetLightGroups ()
 
@@ -75,7 +143,7 @@ function Prman.GetLightGroups ()
         -- get LightGroup
         local lightGroup = Interface.GetGlobalAttr('material.prmanLightParams.lightGroup', SceneGraph_path)
 
-        if lightGroup ~= nil then
+        if lightGroup then
             lightGroup = Attribute.GetStringValue(lightGroup, '')
         else
             lightGroup = 'default'
@@ -104,7 +172,11 @@ function Prman.GetLightGroups ()
     end
 
 
-    return Data.RemoveDoubles(lightGroups)
+
+    lightGroups = Data.RemoveDoubles(lightGroups)
+    lightGroups = OnlyDefautCleaner(lightGroups)
+
+    return lightGroups
 
 end
 

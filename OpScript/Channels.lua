@@ -27,27 +27,33 @@ function Channels.Checkboxed ( inputGroup, channelTable, forceRed, teeTag )
 
     for indexChannel=1, #channelTable do
 
-        local channelName = channelTable[indexChannel][1]
-        local channelType = channelTable[indexChannel][2]
-        local channelLpe  = channelTable[indexChannel][3]
-        local channelStat = channelTable[indexChannel][4]
-
 
 
         local checked = false
 
-        if Channels.CheckboxMatch( inputGroup, channelName:gsub('^__', '') ) then
+        local checkboxName = channelTable[indexChannel][1]
+        checkboxName = checkboxName:gsub('^_+', '')
+        checkboxName = checkboxName:gsub('_.+$', '')
 
-            checked = true end
+        if Channels.CheckboxMatch( inputGroup, checkboxName ) then
+            checked = true
+        end
 
-        if channelName == 'Ci' or channelName == 'a' then
-        if Channels.CheckboxMatch( inputGroup, 'beauty' ) then
-
-                    checked = true end end
+        if checkboxName == 'Ci' or checkboxName == 'a' then
+            if Channels.CheckboxMatch( inputGroup, 'beauty' ) then
+                checked = true
+            end
+        end
 
 
 
         if checked then
+
+            local channelName = channelTable[indexChannel][1]
+            local channelType = channelTable[indexChannel][2]
+            local channelLpe  = channelTable[indexChannel][3]
+            local channelStat = channelTable[indexChannel][4]
+
 
             if teeTag then
                 channelName  = 'tee_' .. channelName
@@ -100,6 +106,41 @@ end
 
 
 
+local function MakeGrouped ( channelTable, tag, lpeGroup, lightGroup )
+
+
+    for indexChannel=1, #channelTable do
+
+        local channelName = channelTable[indexChannel][1]
+        local channelLpe  = channelTable[indexChannel][3]
+
+        if string.find(channelLpe, 'lpe:') then 
+
+            channelName = channelName .. tag
+
+            if lpeGroup ~= '' then
+                channelLpe  = channelLpe:gsub( "lpe:C", string.format("lpe:C%s", lpeGroup) )
+            end
+
+            if lightGroup ~= '' then
+                channelLpe  = channelLpe:gsub( "<L.>", string.format("<L.%s>", lightGroup) )
+            end
+
+        end
+
+        channelTable[indexChannel][1] = channelName
+        channelTable[indexChannel][3] = channelLpe
+
+    end
+
+
+    return channelTable
+end
+
+
+
+
+
 local function LobePatrol (channelString)
 
     local channelTable = Data.SplitString(channelString, ',')
@@ -134,7 +175,7 @@ end
 
 
 
-function Channels.PrmanEssentials ( lpeGroup, lightGroup )
+function Channels.PrmanEssentials ( tag, lpeGroup, lightGroup )
 
     lpeGroup   = lpeGroup   or ''
     lightGroup = lightGroup or ''
@@ -188,6 +229,9 @@ function Channels.PrmanEssentials ( lpeGroup, lightGroup )
     end
 
 
+
+    EssentialChannels = MakeGrouped(EssentialChannels, tag, lpeGroup, lightGroup)
+
     local channelString = Channels.Checkboxed(SearchGroup, EssentialChannels)
     LobePatrol(channelString)
 
@@ -203,7 +247,7 @@ end
 function Channels.PrmanDenoise()
 
     local DenoiseChannels = {
-        { 'Ci'            ,  'color'  ,   "color lpe:C.*[<L.>O]"                                                                       , ''         },
+        { 'Ci'            ,  'color'  ,   ""                                                                                           , ''         },
         { 'a'             ,  'float'  ,   ""                                                                                           , ''         },
         { 'mse'           ,  'color'  ,   "Ci"                                                                                         , 'mse'      },
 

@@ -70,4 +70,31 @@ end
 
 
 
+function Data.Clone ( inputData )
+
+
+    local inputType = type(inputData)
+    local copy = nil
+
+
+    if inputType == 'table' then
+
+        copy = {}
+        for key, value in pairs(inputData) do
+            copy[key] = value
+        end
+
+
+    else
+        copy = inputData
+    end
+
+
+    return copy
+end
+
+
+
+
+
 return Data
