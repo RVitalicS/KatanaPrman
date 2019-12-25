@@ -158,15 +158,19 @@ local function LobePatrol (channelString)
 
 
     if hasLobe then
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.diffuse2',  StringAttribute("Diffuse"))
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.diffuse3',  StringAttribute("Subsurface"))
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular2', StringAttribute("Specular"))
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular3', StringAttribute("RoughSpecular"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.diffuse2', StringAttribute("Diffuse,HairDiffuse"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.diffuse3', StringAttribute("Subsurface"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular2', StringAttribute("Specular,HairSpecularR"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular3', StringAttribute("RoughSpecular,HairSpecularTRT"))
         Interface.SetAttr('prmanGlobalStatements.options.lpe.specular4', StringAttribute("Clearcoat"))
         Interface.SetAttr('prmanGlobalStatements.options.lpe.specular5', StringAttribute("Iridescence"))
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular6', StringAttribute("Fuzz"))
-        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular7', StringAttribute("SingleScatter"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular6', StringAttribute("Fuzz,HairSpecularGLINTS"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.specular7', StringAttribute("SingleScatter,HairSpecularTT"))
         Interface.SetAttr('prmanGlobalStatements.options.lpe.specular8', StringAttribute("Glass"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.user2', StringAttribute("Albedo,DiffuseAlbedo,SubsurfaceAlbedo,HairAlbedo"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.user3', StringAttribute("Position"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.user4', StringAttribute("UserColor"))
+        Interface.SetAttr('prmanGlobalStatements.options.lpe.user6', StringAttribute("Normal,DiffuseNormal,HairTangent,SubsurfaceNormal,SpecularNormal,RoughSpecularNormal,SingleScatterNormal,FuzzNormal,IridescenceNormal,GlassNormal"))
     end
 
 end
